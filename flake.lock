@@ -11,15 +11,15 @@
       "locked": {
         "lastModified": 1769621892,
         "narHash": "sha256-c/by8GvAlHS5wSs0d2qb9VF1IGwDzS6NsBE8wOoJl00=",
-        "ref": "refs/heads/master",
+        "owner": "fudoniten",
+        "repo": "aegis-tools-system",
         "rev": "ab9b861eabccea57ee3de018c2dbd778c5e503e3",
-        "revCount": 6,
-        "type": "git",
-        "url": "file:///net/projects/niten/aegis-tools-system"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///net/projects/niten/aegis-tools-system"
+        "owner": "fudoniten",
+        "repo": "aegis-tools-system",
+        "type": "github"
       }
     },
     "clj-nix": {
@@ -448,11 +448,11 @@
         "rev": "f81cfe9a536ee9c783649c065ef13104debb99af",
         "revCount": 367,
         "type": "git",
-        "url": "file:///net/projects/niten/nix-entities"
+        "url": "ssh://git@github.com/fudoniten/fudo-entities"
       },
       "original": {
         "type": "git",
-        "url": "file:///net/projects/niten/nix-entities"
+        "url": "ssh://git@github.com/fudoniten/fudo-entities"
       }
     },
     "nix-fetcher-data": {
