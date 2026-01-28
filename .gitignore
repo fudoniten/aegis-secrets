@@ -1,0 +1,15 @@
+# Never ignore encrypted secrets - they're safe!
+# Only ignore temporary/working files
+
+# Editor files
+*~
+*.swp
+.#*
+
+# Nix
+result
+result-*
+
+# Temporary decrypted files (should never be committed)
+*.decrypted
+*.tmp
