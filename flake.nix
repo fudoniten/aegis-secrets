@@ -6,15 +6,13 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     # Admin tools for managing secrets
-    # TODO: Change to github:fudoniten/aegis-tools-system once pushed
     aegis-tools-system = {
-      url = "git+file:///net/projects/niten/aegis-tools-system";
+      url = "github:fudoniten/aegis-tools-system";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Entities repo for host information (as a flake, so we can access its outputs)
-    # TODO: Change to github:fudoniten/nix-entities once using GitHub
-    nix-entities.url = "git+file:///net/projects/niten/nix-entities";
+    nix-entities.url = "github:fudoniten/nix-entities";
 
     # User secret repos (add as needed)
     # aegis-secrets-niten.url = "github:niten/aegis-secrets-niten";
