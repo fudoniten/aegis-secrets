@@ -1,0 +1,8 @@
+services = [
+    "host",
+    "ssh",
+]
+filesystem_keys = []
+master_pubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrviDiYCJV2w1WcRIWOwbEZpqvpp80t7/FY3NK15aa1"
+
+[extra_secrets]
