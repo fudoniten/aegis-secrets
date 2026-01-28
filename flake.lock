@@ -9,14 +9,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1769621225,
-        "narHash": "sha256-BKkZ3feYrknAe83vS/v7X8G6/ai8/g8Bzqwx8d+YgmQ=",
-        "path": "/net/projects/niten/aegis-tools-system",
-        "type": "path"
+        "lastModified": 1769621892,
+        "narHash": "sha256-c/by8GvAlHS5wSs0d2qb9VF1IGwDzS6NsBE8wOoJl00=",
+        "ref": "refs/heads/master",
+        "rev": "ab9b861eabccea57ee3de018c2dbd778c5e503e3",
+        "revCount": 6,
+        "type": "git",
+        "url": "file:///net/projects/niten/aegis-tools-system"
       },
       "original": {
-        "path": "/net/projects/niten/aegis-tools-system",
-        "type": "path"
+        "type": "git",
+        "url": "file:///net/projects/niten/aegis-tools-system"
       }
     },
     "clj-nix": {
@@ -291,6 +294,22 @@
         "type": "github"
       }
     },
+    "fudo-lib": {
+      "locked": {
+        "lastModified": 1769473966,
+        "narHash": "sha256-ml1kaep80jJeRSbalRGow/oq8UObO61ERvabD8x6rRg=",
+        "owner": "fudoniten",
+        "repo": "fudo-nix-lib",
+        "rev": "50be04ca9ee24dee41adf8324e218b39406507e9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fudoniten",
+        "ref": "25.11",
+        "repo": "fudo-nix-lib",
+        "type": "github"
+      }
+    },
     "gitignore": {
       "inputs": {
         "nixpkgs": [
@@ -418,16 +437,22 @@
       }
     },
     "nix-entities": {
-      "flake": false,
+      "inputs": {
+        "fudo-lib": "fudo-lib",
+        "nixpkgs": "nixpkgs_5"
+      },
       "locked": {
-        "lastModified": 1769555535,
-        "narHash": "sha256-5I5pqpdgpz9GRDII6QB20uziGXZ5R/OGMzVJ7u/UeUo=",
-        "path": "/net/projects/niten/nix-entities",
-        "type": "path"
+        "lastModified": 1769555525,
+        "narHash": "sha256-yI8bfRvvu7Cbl4fqD6ASSnlmf6g3W6gDmrBO9OKu3KU=",
+        "ref": "refs/heads/master",
+        "rev": "f81cfe9a536ee9c783649c065ef13104debb99af",
+        "revCount": 367,
+        "type": "git",
+        "url": "file:///net/projects/niten/nix-entities"
       },
       "original": {
-        "path": "/net/projects/niten/nix-entities",
-        "type": "path"
+        "type": "git",
+        "url": "file:///net/projects/niten/nix-entities"
       }
     },
     "nix-fetcher-data": {
@@ -603,6 +628,20 @@
     },
     "nixpkgs_5": {
       "locked": {
+        "lastModified": 1769433173,
+        "narHash": "sha256-Gf1dFYgD344WZ3q0LPlRoWaNdNQq8kSBDLEWulRQSEs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "13b0f9e6ac78abbbb736c635d87845c4f4bee51b",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_6": {
+      "locked": {
         "lastModified": 1751274312,
         "narHash": "sha256-/bVBlRpECLVzjV19t5KMdMFWSwKLtb5RyXdjz3LJT+g=",
         "owner": "NixOS",
@@ -622,7 +661,7 @@
         "aegis-tools-system": "aegis-tools-system",
         "flake-utils": "flake-utils_2",
         "nix-entities": "nix-entities",
-        "nixpkgs": "nixpkgs_5"
+        "nixpkgs": "nixpkgs_6"
       }
     },
     "systems": {

@@ -6,16 +6,15 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     # Admin tools for managing secrets
+    # TODO: Change to github:fudoniten/aegis-tools-system once pushed
     aegis-tools-system = {
-      url = "path:/net/projects/niten/aegis-tools-system";
+      url = "git+file:///net/projects/niten/aegis-tools-system";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Entities repo for host information
-    nix-entities = {
-      url = "path:/net/projects/niten/nix-entities";
-      flake = false;
-    };
+    # Entities repo for host information (as a flake, so we can access its outputs)
+    # TODO: Change to github:fudoniten/nix-entities once using GitHub
+    nix-entities.url = "git+file:///net/projects/niten/nix-entities";
 
     # User secret repos (add as needed)
     # aegis-secrets-niten.url = "github:niten/aegis-secrets-niten";
@@ -27,18 +26,20 @@
       # Helper to safely read a directory (returns empty if doesn't exist)
       safeReadDir = path:
         if builtins.pathExists path then builtins.readDir path else { };
-      # Per-system outputs (devShells)
     in flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         aegis = aegis-tools-system.packages.${system}.aegis;
+
+        # Get the source path of nix-entities for the CLI to use
+        entitiesPath = nix-entities.outPath;
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [ aegis pkgs.age pkgs.ssh-to-age pkgs.git ];
 
           shellHook = ''
             export AEGIS_SYSTEM="$PWD"
-            export AEGIS_ENTITIES="${nix-entities}"
+            export AEGIS_ENTITIES="${entitiesPath}"
 
             echo ""
             echo "╔═══════════════════════════════════════════════════════════════╗"
@@ -49,7 +50,6 @@
             echo "  aegis --help           Show all commands"
             echo "  aegis sync-hosts       Sync hosts from nix-entities"
             echo "  aegis build            Build all secrets"
-            echo "  aegis build --pull     Pull entities and build"
             echo "  aegis status           Show secrets status"
             echo ""
             echo "Environment:"
