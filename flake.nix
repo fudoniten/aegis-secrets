@@ -12,7 +12,7 @@
     };
 
     # Entities repo for host information (as a flake, so we can access its outputs)
-    nix-entities.url = "github:fudoniten/nix-entities";
+    nix-entities.url = "github:fudoniten/fudo-entities";
 
     # User secret repos (add as needed)
     # aegis-secrets-niten.url = "github:niten/aegis-secrets-niten";
