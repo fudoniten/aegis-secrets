@@ -82,5 +82,15 @@
             + "/${builtins.replaceStrings [ "." ] [ "_" ] domain}";
           roleKeyPath = role: ./build/roles + "/${role}.age";
         };
+
+        # NixOS modules
+        # Usage: imports = [ inputs.aegis-secrets.nixosModules.deriveMasterKey ];
+        nixosModules = {
+          # Automatically derives the age master key from the SSH host ed25519 key
+          # at boot. Required because aegis-tools-system encrypts secrets with an
+          # age X25519 key (converted from the SSH pubkey via ssh-to-age), so
+          # decryption needs the corresponding age private key — not the raw SSH key.
+          deriveMasterKey = import ./modules/derive-master-key.nix;
+        };
       };
 }
