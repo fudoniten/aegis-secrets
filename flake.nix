@@ -11,15 +11,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Entities repo for host information (as a flake, so we can access its outputs)
-    nix-entities.url = "git+ssh://git@github.com/fudoniten/fudo-entities";
-
     # User secret repos (add as needed)
     # aegis-secrets-niten.url = "github:niten/aegis-secrets-niten";
   };
 
-  outputs = { self, nixpkgs, flake-utils, aegis-tools-system, nix-entities, ...
-    }@inputs:
+  outputs = { self, nixpkgs, flake-utils, aegis-tools-system, ... }@inputs:
     let
       # Helper to safely read a directory (returns empty if doesn't exist)
       safeReadDir = path:
@@ -28,16 +24,12 @@
       let
         pkgs = import nixpkgs { inherit system; };
         aegis = aegis-tools-system.packages.${system}.aegis;
-
-        # Get the source path of nix-entities for the CLI to use
-        entitiesPath = nix-entities.outPath;
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [ aegis pkgs.age pkgs.ssh-to-age pkgs.git ];
 
           shellHook = ''
             export AEGIS_SYSTEM="$PWD"
-            export AEGIS_ENTITIES="${entitiesPath}"
 
             echo ""
             echo "╔═══════════════════════════════════════════════════════════════╗"
@@ -46,13 +38,11 @@
             echo ""
             echo "Available commands:"
             echo "  aegis --help           Show all commands"
-            echo "  aegis sync-hosts       Sync hosts from nix-entities"
             echo "  aegis build            Build all secrets"
             echo "  aegis status           Show secrets status"
             echo ""
             echo "Environment:"
             echo "  AEGIS_SYSTEM:   $AEGIS_SYSTEM"
-            echo "  AEGIS_ENTITIES: $AEGIS_ENTITIES"
             echo ""
           '';
         };

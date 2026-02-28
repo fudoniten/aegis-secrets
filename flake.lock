@@ -294,22 +294,6 @@
         "type": "github"
       }
     },
-    "fudo-lib": {
-      "locked": {
-        "lastModified": 1769473966,
-        "narHash": "sha256-ml1kaep80jJeRSbalRGow/oq8UObO61ERvabD8x6rRg=",
-        "owner": "fudoniten",
-        "repo": "fudo-nix-lib",
-        "rev": "50be04ca9ee24dee41adf8324e218b39406507e9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "fudoniten",
-        "ref": "25.11",
-        "repo": "fudo-nix-lib",
-        "type": "github"
-      }
-    },
     "gitignore": {
       "inputs": {
         "nixpkgs": [
@@ -434,25 +418,6 @@
         "owner": "fudoniten",
         "repo": "nexus",
         "type": "github"
-      }
-    },
-    "nix-entities": {
-      "inputs": {
-        "fudo-lib": "fudo-lib",
-        "nixpkgs": "nixpkgs_5"
-      },
-      "locked": {
-        "lastModified": 1772252093,
-        "narHash": "sha256-sXi6om1r9fYBEcUfbDfeZg9wx+dUcdzv48oK/QmF6ow=",
-        "ref": "refs/heads/master",
-        "rev": "ad19e3941d9c0f220a4f291272967a16814f0952",
-        "revCount": 376,
-        "type": "git",
-        "url": "ssh://git@github.com/fudoniten/fudo-entities"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/fudoniten/fudo-entities"
       }
     },
     "nix-fetcher-data": {
@@ -626,20 +591,6 @@
         "type": "github"
       }
     },
-    "nixpkgs_5": {
-      "locked": {
-        "lastModified": 1769433173,
-        "narHash": "sha256-Gf1dFYgD344WZ3q0LPlRoWaNdNQq8kSBDLEWulRQSEs=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "13b0f9e6ac78abbbb736c635d87845c4f4bee51b",
-        "type": "github"
-      },
-      "original": {
-        "id": "nixpkgs",
-        "type": "indirect"
-      }
-    },
     "nixpkgs_6": {
       "locked": {
         "lastModified": 1751274312,
@@ -660,7 +611,6 @@
       "inputs": {
         "aegis-tools-system": "aegis-tools-system",
         "flake-utils": "flake-utils_2",
-        "nix-entities": "nix-entities",
         "nixpkgs": "nixpkgs_6"
       }
     },
