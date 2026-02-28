@@ -3,6 +3,6 @@ services = [
     "ssh",
 ]
 filesystem_keys = []
-age_pubkey = "age184hqpydf7cmzzkp64msqs7xysfvze878ny45f40gteevezgtxd2spevvqa"
+age_pubkey = "age1ls280xlx5qegkaka5suck28hh0dyvrhrlh3xrufkzw27j63mkppq93dh7d"
 
 [extra_secrets]
