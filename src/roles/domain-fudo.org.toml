@@ -1,0 +1,8 @@
+hosts = [
+    "aedile",
+    "arx",
+    "france",
+    "germany",
+    "legatus",
+    "praetor",
+]
