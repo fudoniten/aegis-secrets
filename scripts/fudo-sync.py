@@ -208,7 +208,8 @@ class SecretsSync:
             success("  ✓ All master keys are up to date")
         
         if skipped > 0:
-            warn(f"  ⚠ {skipped} host(s) have no valid master-key in nix-entities: {' '.join(missing_keys)}")
+            warn(f"  ⚠ {skipped} host(s) have no valid master-key: {' '.join(missing_keys)}")
+            warn(f"     These hosts will be skipped during build")
         
         # Return the list of missing keys so we can warn before build
         self.hosts_without_keys = missing_keys
@@ -324,11 +325,17 @@ class SecretsSync:
             run_command(['aegis', 'build'])
         except subprocess.CalledProcessError as e:
             print()
-            error("Build failed.")
+            # If there are hosts without keys, this is expected - treat as warning
             if self.hosts_without_keys:
-                error(f"Hosts without master keys: {' '.join(self.hosts_without_keys)}")
-                error("Set master keys with: aegis set-master-key <host> --public-key 'age1...'")
-            sys.exit(e.returncode)
+                warn("Build completed with warnings.")
+                warn(f"Hosts without master keys could not be built: {' '.join(self.hosts_without_keys)}")
+                warn("Set master keys with: aegis set-master-key <host> --public-key 'age1...'")
+                print()
+                return  # Continue successfully despite build errors
+            else:
+                # Unexpected build failure
+                error("Build failed unexpectedly.")
+                sys.exit(e.returncode)
         print()
     
     def run(self) -> None:
