@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# Iterate hosts from nix-entities, check secrets initialization, and build.
+
+set -euo pipefail
+
+AEGIS_SYSTEM="${AEGIS_SYSTEM:-$(pwd)}"
+: "${AEGIS_ENTITIES:?AEGIS_ENTITIES is not set — run this inside the dev shell}"
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+warn()  { echo -e "${YELLOW}${*}${NC}" >&2; }
+error() { echo -e "${RED}${BOLD}${*}${NC}" >&2; }
+info()  { echo -e "${CYAN}${*}${NC}"; }
+
+# ---------------------------------------------------------------------------
+# Host discovery
+# ---------------------------------------------------------------------------
+
+entity_hosts() {
+    # Try to read the canonical host list from nix-entities.
+    # fudo-entities exposes hosts under lib.hosts; adjust the attr path here
+    # if your flake uses a different output (e.g. #hosts or #legacyPackages.…).
+    nix eval --json \
+        --extra-experimental-features 'nix-command flakes' \
+        "path:${AEGIS_ENTITIES}#lib.hosts" \
+        --apply builtins.attrNames \
+        2>/dev/null \
+        | python3 -c "import json,sys; [print(h) for h in sorted(json.load(sys.stdin))]"
+}
+
+aegis_hosts() {
+    find "${AEGIS_SYSTEM}/src/hosts" -maxdepth 1 -name "*.toml" \
+        | sed 's|.*/||; s|\.toml$||' \
+        | sort
+}
+
+# ---------------------------------------------------------------------------
+# Per-host checks
+# ---------------------------------------------------------------------------
+
+check_ssh() {
+    local host="$1"
+    # ed25519 is the minimum required key type
+    [[ -f "${AEGIS_SYSTEM}/build/hosts/${host}/ssh/ssh_host_ed25519_key.age" ]]
+}
+
+check_nexus() {
+    local host="$1"
+    [[ -f "${AEGIS_SYSTEM}/build/hosts/${host}/nexus-key.age" ]]
+}
+
+check_kerberos() {
+    local host="$1"
+    # Principals are FQDNs: host_<shortname>.<domain>.age — match by short name prefix
+    local found
+    found=$(find "${AEGIS_SYSTEM}/src/kerberos/realms" -maxdepth 3 \
+        -name "host_${host}.*\.age" 2>/dev/null | head -1)
+    [[ -n "$found" ]]
+}
+
+# Returns 0 if clean, 1 if warnings were printed
+check_host() {
+    local host="$1"
+    local -a missing=()
+
+    check_ssh      "$host" || missing+=("SSH host keys    (aegis import-ssh-host-keys ${host})")
+    check_nexus    "$host" || missing+=("Nexus DDNS key   (aegis import-nexus-key ${host})")
+    check_kerberos "$host" || missing+=("Kerberos principal  (aegis import-kerberos-realm <REALM>)")
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo -e "  ${GREEN}✓${NC}  ${host}"
+        return 0
+    else
+        echo -e "  ${RED}${BOLD}✗${NC}  ${BOLD}${host}${NC}"
+        for item in "${missing[@]}"; do
+            echo -e "       ${YELLOW}→ missing ${item}${NC}"
+        done
+        return 1
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+    echo ""
+    echo -e "${BOLD}╔═══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}║                  Fudo Secrets Sync                           ║${NC}"
+    echo -e "${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
+    # Resolve host list
+    local hosts
+    if hosts=$(entity_hosts 2>/dev/null) && [[ -n "$hosts" ]]; then
+        info "Host list from: nix-entities (${AEGIS_ENTITIES})"
+    else
+        warn "Could not read hosts from nix-entities; falling back to src/hosts/"
+        hosts=$(aegis_hosts)
+    fi
+
+    local all_aegis_hosts
+    all_aegis_hosts=$(aegis_hosts)
+
+    # Hosts in entities but not yet in aegis
+    local -a uninitialised=()
+    while IFS= read -r host; do
+        if ! grep -qx "$host" <<< "$all_aegis_hosts"; then
+            uninitialised+=("$host")
+        fi
+    done <<< "$hosts"
+
+    if [[ ${#uninitialised[@]} -gt 0 ]]; then
+        echo ""
+        error "══════════════════════════════════════════════════════════════════"
+        error " HOSTS IN nix-entities NOT YET INITIALISED IN AEGIS:"
+        error "══════════════════════════════════════════════════════════════════"
+        for h in "${uninitialised[@]}"; do
+            error "   aegis init-host ${h}"
+        done
+        echo ""
+    fi
+
+    # Per-host secrets check (only for hosts that exist in aegis)
+    echo -e "${BOLD}Checking secrets for all known hosts:${NC}"
+    echo ""
+
+    local any_missing=false
+    while IFS= read -r host; do
+        if grep -qx "$host" <<< "$all_aegis_hosts"; then
+            check_host "$host" || any_missing=true
+        fi
+    done <<< "$hosts"
+
+    echo ""
+
+    if $any_missing || [[ ${#uninitialised[@]} -gt 0 ]]; then
+        echo -e "${RED}${BOLD}"
+        echo "  ╔══════════════════════════════════════════════════════════════╗"
+        echo "  ║  ⚠  ONE OR MORE HOSTS ARE MISSING KEYS OR NOT INITIALISED  ║"
+        echo "  ║     Resolve the issues above before relying on this build.  ║"
+        echo "  ╚══════════════════════════════════════════════════════════════╝"
+        echo -e "${NC}"
+    fi
+
+    echo -e "${BOLD}Building secrets for all hosts…${NC}"
+    echo ""
+    aegis build
+    echo ""
+    echo -e "${GREEN}${BOLD}Build complete.${NC}"
+    echo ""
+}
+
+main "$@"
