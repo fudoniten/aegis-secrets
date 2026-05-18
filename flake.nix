@@ -31,13 +31,40 @@
 
         # Get the source path of nix-entities for the CLI to use
         entitiesPath = nix-entities.outPath;
+
+        # Generate a JSON file with entity mappings for shell scripts
+        # This avoids needing to parse Nix in bash
+        entitiesJson = pkgs.writeTextFile {
+          name = "entities.json";
+          text = builtins.toJSON {
+            hosts = builtins.mapAttrs (name: host: {
+              inherit (host) domain site;
+              realm = if host ? domain && nix-entities.entities.domains
+              ? ${host.domain} && nix-entities.entities.domains.${host.domain}
+              ? gssapi-realm then
+                nix-entities.entities.domains.${host.domain}.gssapi-realm
+              else
+                null;
+            }) nix-entities.entities.hosts;
+            domains = builtins.mapAttrs (name: domain: {
+              realm =
+                if domain ? gssapi-realm then domain.gssapi-realm else null;
+            }) nix-entities.entities.domains;
+            sites = builtins.attrNames nix-entities.entities.sites;
+            realms = pkgs.lib.unique (pkgs.lib.filter (r: r != null)
+              (pkgs.lib.mapAttrsToList (_: domain:
+                if domain ? gssapi-realm then domain.gssapi-realm else null)
+                nix-entities.entities.domains));
+          };
+        };
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = [ aegis pkgs.age pkgs.ssh-to-age pkgs.git ];
+          buildInputs = [ aegis pkgs.age pkgs.ssh-to-age pkgs.git pkgs.jq ];
 
           shellHook = ''
             export AEGIS_SYSTEM="$PWD"
             export AEGIS_ENTITIES="${entitiesPath}"
+            export AEGIS_ENTITIES_JSON="${entitiesJson}"
             export PATH="$PWD/scripts:$PATH"
 
             echo ""
@@ -57,8 +84,9 @@
             echo "  aegis verify <host>                Verify secrets are valid"
             echo ""
             echo "Environment:"
-            echo "  AEGIS_SYSTEM:   $AEGIS_SYSTEM"
-            echo "  AEGIS_ENTITIES: $AEGIS_ENTITIES"
+            echo "  AEGIS_SYSTEM:      $AEGIS_SYSTEM"
+            echo "  AEGIS_ENTITIES:    $AEGIS_ENTITIES (source path)"
+            echo "  AEGIS_ENTITIES_JSON: $AEGIS_ENTITIES_JSON (generated mappings)"
             echo ""
           '';
         };
