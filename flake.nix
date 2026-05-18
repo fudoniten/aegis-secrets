@@ -38,6 +38,7 @@
           shellHook = ''
             export AEGIS_SYSTEM="$PWD"
             export AEGIS_ENTITIES="${entitiesPath}"
+            export PATH="$PWD/scripts:$PATH"
 
             echo ""
             echo "╔═══════════════════════════════════════════════════════════════╗"
@@ -45,7 +46,8 @@
             echo "╚═══════════════════════════════════════════════════════════════╝"
             echo ""
             echo "Available commands:"
-            echo "  aegis --help                       Show all commands"
+            echo "  fudo-sync                          Check all Fudo hosts and build secrets"
+            echo "  aegis --help                       Show all aegis commands"
             echo "  aegis init-host <hostname>         Add a new host to configuration"
             echo "  aegis add-user <username>          Add a user and generate their keypair"
             echo "  aegis add-secret <host> <name>     Add a custom secret for a host"
