@@ -216,10 +216,14 @@ add_hosts_to_site_roles() {
 sync_master_keys() {
     info "Syncing Aegis master keys from nix-entities..."
     local count=0
+    local skipped=0
+    local -a missing_keys
+    missing_keys=()
+    
     local all_aegis_hosts
     all_aegis_hosts=$(aegis_hosts)
     
-    while IFS= read -r host; do
+    jq -r '.hosts | keys[]' "$AEGIS_ENTITIES_JSON" 2>/dev/null | while read -r host; do
         [[ -z "$host" ]] && continue
         
         # Only sync keys for hosts that exist in aegis
@@ -230,8 +234,17 @@ sync_master_keys() {
         local master_key
         master_key=$(jq -r ".hosts.\"$host\".\"master-key\" // \"\"" "$AEGIS_ENTITIES_JSON")
         
-        if [[ -z "$master_key" || "$master_key" == "null" ]]; then
-            warn "  ⚠ $host has no master-key in nix-entities"
+        # Skip if no key, null, or a path (not an age public key)
+        if [[ -z "$master_key" || "$master_key" == "null" || "$master_key" =~ ^/ ]]; then
+            missing_keys+=("$host")
+            ((skipped++))
+            continue
+        fi
+        
+        # Validate it's an age public key
+        if [[ ! "$master_key" =~ ^age1 ]]; then
+            missing_keys+=("$host")
+            ((skipped++))
             continue
         fi
         
@@ -241,15 +254,22 @@ sync_master_keys() {
         
         if [[ "$current_key" != "$master_key" ]]; then
             info "  → Updating master key for $host"
-            aegis set-master-key "$host" --public-key "$master_key"
-            ((count++))
+            if aegis set-master-key "$host" --public-key "$master_key" 2>&1; then
+                ((count++))
+            else
+                warn "  ⚠ Failed to update master key for $host"
+            fi
         fi
-    done < <(jq -r '.hosts | keys[]' "$AEGIS_ENTITIES_JSON")
+    done
 
     if [[ $count -gt 0 ]]; then
         success "  ✓ Updated $count master key(s)"
     else
         success "  ✓ All master keys are up to date"
+    fi
+    
+    if [[ $skipped -gt 0 ]]; then
+        warn "  ⚠ $skipped host(s) have no valid master-key in nix-entities: ${missing_keys[*]}"
     fi
     echo ""
 }

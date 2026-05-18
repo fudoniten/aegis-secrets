@@ -1,0 +1,8 @@
+services = [
+    "host",
+    "ssh",
+]
+filesystem_keys = []
+domain = "fudo.org"
+
+[extra_secrets]

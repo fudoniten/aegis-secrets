@@ -49,7 +49,8 @@
                 host.aegis.master-key
               else
                 null;
-            }) nix-entities.entities.hosts;
+            }) (pkgs.lib.filterAttrs (_: host: host.nixos-system or false)
+              nix-entities.entities.hosts);
             domains = builtins.mapAttrs (name: domain: {
               realm =
                 if domain ? gssapi-realm then domain.gssapi-realm else null;
