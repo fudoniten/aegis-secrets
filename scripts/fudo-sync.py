@@ -253,6 +253,25 @@ class SecretsSync:
             success("  ✓ All site roles already initialized")
         print()
     
+    def init_dns_master_roles(self) -> None:
+        """Initialize DNS master roles for each domain/zone."""
+        info("Checking DNS master roles...")
+        existing_roles = self.get_aegis_roles()
+        domains = self.entities.get('domains', {}).keys()
+        new_roles = [f"dns-master-{domain}" for domain in domains if f"dns-master-{domain}" not in existing_roles]
+        
+        if new_roles:
+            for role in new_roles:
+                info(f"  → Initializing role: {role}")
+                try:
+                    run_command(['aegis', 'init-role', role])
+                except subprocess.CalledProcessError:
+                    error(f"  ✗ Failed to initialize role: {role}")
+            success(f"  ✓ Initialized {len(new_roles)} DNS master role(s)")
+        else:
+            success("  ✓ All DNS master roles already initialized")
+        print()
+    
     def add_hosts_to_domain_roles(self) -> None:
         """Add hosts to their domain roles."""
         info("Adding hosts to domain roles...")
@@ -356,6 +375,7 @@ class SecretsSync:
         self.sync_master_keys()
         self.init_domain_roles()
         self.init_site_roles()
+        self.init_dns_master_roles()
         self.add_hosts_to_domain_roles()
         self.add_hosts_to_site_roles()
         
