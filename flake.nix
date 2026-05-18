@@ -45,6 +45,10 @@
                 nix-entities.entities.domains.${host.domain}.gssapi-realm
               else
                 null;
+              master-key = if host ? aegis && host.aegis ? master-key then
+                host.aegis.master-key
+              else
+                null;
             }) nix-entities.entities.hosts;
             domains = builtins.mapAttrs (name: domain: {
               realm =

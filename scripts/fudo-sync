@@ -213,6 +213,47 @@ add_hosts_to_site_roles() {
     echo ""
 }
 
+sync_master_keys() {
+    info "Syncing Aegis master keys from nix-entities..."
+    local count=0
+    local all_aegis_hosts
+    all_aegis_hosts=$(aegis_hosts)
+    
+    while IFS= read -r host; do
+        [[ -z "$host" ]] && continue
+        
+        # Only sync keys for hosts that exist in aegis
+        if ! grep -qx "$host" <<< "$all_aegis_hosts"; then
+            continue
+        fi
+        
+        local master_key
+        master_key=$(jq -r ".hosts.\"$host\".\"master-key\" // \"\"" "$AEGIS_ENTITIES_JSON")
+        
+        if [[ -z "$master_key" || "$master_key" == "null" ]]; then
+            warn "  ⚠ $host has no master-key in nix-entities"
+            continue
+        fi
+        
+        # Read current key from host toml
+        local current_key
+        current_key=$(grep "^age_pubkey" "${AEGIS_SYSTEM}/src/hosts/${host}.toml" 2>/dev/null | cut -d'"' -f2 || echo "")
+        
+        if [[ "$current_key" != "$master_key" ]]; then
+            info "  → Updating master key for $host"
+            aegis set-master-key "$host" --public-key "$master_key"
+            ((count++))
+        fi
+    done < <(jq -r '.hosts | keys[]' "$AEGIS_ENTITIES_JSON")
+
+    if [[ $count -gt 0 ]]; then
+        success "  ✓ Updated $count master key(s)"
+    else
+        success "  ✓ All master keys are up to date"
+    fi
+    echo ""
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -239,6 +280,7 @@ main() {
     # Initialize everything in order
     init_realms
     init_hosts
+    sync_master_keys
     init_domain_roles
     init_site_roles
     add_hosts_to_domain_roles
