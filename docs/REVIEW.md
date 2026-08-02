@@ -307,7 +307,9 @@ read.
 `encrypt_age` call, and validated at startup against the local private key. A second admin key held
 offline (paper, YubiKey, HSM) then makes losing the daily driver a non-event.
 
-- [x] Addressed — admin recipient set in `keys/admin/*.pub`, validated against the local key.
+- [x] Addressed — admin recipient set in `keys/admin/*.pub`, validated against the local key, and
+  `aegis reencrypt` extends a new key to every encrypted file in the repo (not just per-host
+  output). See §6 for the workflow and the caveat about legacy trees.
 
 ## R3 — Removal is not revocation
 
@@ -542,6 +544,60 @@ Running it against `aegis-secrets` for the first time reported:
 `FUDO.ORG` also holds host principals for 30 `sea.fudo.org` and 2 `informis.land` hosts, which now
 have their own realms. `realm.toml` deliberately claims only `fudo.org` for it, leaving those as
 stale principals to be cleaned up rather than routing those hosts' keytabs to the wrong realm.
+
+---
+
+# 6. Adding a redundant admin key
+
+Registering a key and making it usable are two different things:
+
+```bash
+aegis admin add-key --name backup --public-key age1...   # register
+aegis reencrypt                                          # make it usable
+aegis check                                              # confirm
+```
+
+`add-key` alone changes no existing file — the new key can decrypt nothing until `reencrypt` has
+run. It reports how many files are still out of reach, per category.
+
+Generate the backup key somewhere you are willing to lose the everyday one from: a removable
+volume, an offline machine, paper. `AEGIS_ADMIN_KEY` points the tools at a key outside
+`~/.config/aegis/key.txt` when you need to use it.
+
+## What `reencrypt` covers
+
+| Category | Files in this repo | Recipients |
+|---|---:|---|
+| `admin-only` | 335 | admin set only — role private keys, user private keys, realm master keys, every principal |
+| `host` | 110 | host master key + admin set (+ the KDC role for `keytab.age`) |
+| `role` | 67 | host master key + admin set |
+| `user` | 0 | host + admin set, plus the user's own key on manifests |
+| `kdc` | 0 | realm's KDC role + admin set |
+| `dnssec` | 0 | `dns-master-<domain>` role + admin set |
+| **not covered** | **245** | see below |
+
+The `admin-only` row is the one that matters for redundancy: hosts keep running without the admin
+key, but nothing can ever be added to a realm or a role again.
+
+## What it deliberately will not touch
+
+245 encrypted files under `deploy/` match no current policy, so `reencrypt` leaves them alone and a
+new admin key will not reach them:
+
+| Subtree | Files | What it looks like |
+|---|---:|---|
+| `deploy/realms/` | 175 | a shadow copy of every Kerberos principal, named `<principal>.key.age` with `master-key.age` alongside — the pre-`src/kerberos/` layout, encrypted for two recipients rather than one |
+| `deploy/secrets/` | 49 | per-domain secrets from the same era |
+| `deploy/domains/` | 18 | `role-key.age` (26 recipients) and `dns/<domain>-ksk.age` (2) — predates `deploy/dnssec/` |
+| `deploy/roles/` | 3 | `dns-{fudo.org,informis.land,sea.fudo.org}.age`, orphaned by the rename to `dns-master-*` |
+
+age does not expose the recipients of an existing file, so re-encrypting one means choosing a new
+set blind — a wrong guess silently destroys access. These need a decision rather than a default:
+confirm whether each tree is still live, then regenerate it through the current tools or delete it.
+
+`deploy/realms/` in particular is a second copy of the material in `src/kerberos/realms/`. Two
+copies with different recipient sets is both a wider blast radius and a second thing to keep in
+step; worth resolving before it drifts further.
 
 ---
 
