@@ -83,6 +83,13 @@ aegis build-user-secrets
 |----------|-------------|
 | `AEGIS_SYSTEM` | Path to this secrets repository (for `aegis` CLI) |
 
+## Documentation
+
+- [`docs/REVIEW.md`](./docs/REVIEW.md) — system-wide review: correctness bugs, recoverability
+  analysis ("what happens if I fumble"), and simplification proposals, with stable finding IDs.
+- [`docs/kerberos-realm-management.md`](./docs/kerberos-realm-management.md) — design proposal for
+  Kerberos realm management (principals, cross-realm trust, KDC deployment).
+
 ## Security
 
 - All `.age` files are encrypted with age
