@@ -80,10 +80,14 @@
             echo "Available commands:"
             echo "  fudo-sync                          Check all Fudo hosts and build secrets"
             echo "  aegis --help                       Show all aegis commands"
+            echo "  aegis check                        Report drift between src/ and deploy/"
             echo "  aegis init-host <hostname>         Add a new host to configuration"
             echo "  aegis add-user <username>          Add a user and generate their keypair"
             echo "  aegis add-secret <host> <name>     Add a custom secret for a host"
             echo "  aegis build                        Build all secrets (SSH keys, Nexus keys, keytabs, user secrets)"
+            echo "  aegis reencrypt                    Repair recipient drift without new key material"
+            echo "  aegis realm list                   Show realms, domains, trusts and members"
+            echo "  aegis admin list-keys              Show the admin recipient set"
             echo "  aegis status                       Show what needs building"
             echo "  aegis list [host]                  List secrets for host(s)"
             echo "  aegis verify <host>                Verify secrets are valid"
@@ -99,27 +103,37 @@
         # System-independent outputs
 
         # Expose paths directly (not as derivations)
-        # Usage: inputs.aegis-secrets.buildPath
-        buildPath = ./build;
+        # Usage: inputs.aegis-secrets.deployPath
+        #
+        # Note: despite the name, this directory is not a regenerable build
+        # artifact. It holds the ONLY copy of every host's SSH host keys,
+        # Nexus keys and DNSSEC private keys. Deleting it and rebuilding mints
+        # new identities rather than restoring the old ones.
+        deployPath = ./deploy;
         srcPath = ./src;
         keysPath = ./keys;
 
+        # Deprecated alias from when the directory was called build/
+        buildPath = ./deploy;
+
         # Expose paths for specific hosts
         # Usage: inputs.aegis-secrets.hostPath "nostromo"
-        hostPath = hostname: ./build/hosts + "/${hostname}";
+        hostPath = hostname: ./deploy/hosts + "/${hostname}";
 
         # List of configured hosts
         # Usage: inputs.aegis-secrets.hosts
-        hosts = builtins.attrNames (safeReadDir ./build/hosts);
+        hosts = builtins.attrNames (safeReadDir ./deploy/hosts);
 
         # Helper functions
         # Usage: inputs.aegis-secrets.lib.hostSecretsPath "nostromo"
         lib = {
-          hostSecretsPath = hostname: ./build/hosts + "/${hostname}";
+          hostSecretsPath = hostname: ./deploy/hosts + "/${hostname}";
           domainSecretsPath = domain:
-            ./build/domains
+            ./deploy/domains
             + "/${builtins.replaceStrings [ "." ] [ "_" ] domain}";
-          roleKeyPath = role: ./build/roles + "/${role}.age";
+          roleKeyPath = role: ./deploy/roles + "/${role}.age";
+          kdcPrincipalsPath = realm: ./deploy/kdc + "/${realm}-principals.age";
+          kdcRealmKeyPath = realm: ./deploy/kdc + "/${realm}-realm-key.age";
         };
       };
 }

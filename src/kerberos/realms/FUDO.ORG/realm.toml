@@ -1,0 +1,514 @@
+etypes = [
+    "aes128-cts-hmac-sha1-96",
+    "aes256-cts-hmac-sha1-96",
+]
+max_ticket_lifetime = "1w"
+max_renewable_lifetime = "1m"
+domains = [
+    "fudo.org",
+]
+kdc_role = "kdc"
+trusts = [
+    "INFORMIS.LAND",
+    "SEA.FUDO.ORG",
+]
+
+[principals."WELLKNOWN/ANONYMOUS@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/ANONYMOUS@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/ANONYMOUS@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/org.h5l.fast-cookie@WELLKNOWN:ORG.H5L"]
+kind = "infrastructure"
+
+[principals."changepw/kerberos@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."changepw/kerberos@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."changepw/kerberos@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."default@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."default@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."default@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."host/aedile.fudo.org"]
+kind = "service"
+
+[principals."host/arx.fudo.org"]
+kind = "service"
+
+[principals."host/atom.sea.fudo.org"]
+kind = "service"
+
+[principals."host/cargo.sea.fudo.org"]
+kind = "service"
+
+[principals."host/cartus.sea.fudo.org"]
+kind = "service"
+
+[principals."host/cashew.fudo.org"]
+kind = "service"
+
+[principals."host/cellar.sea.fudo.org"]
+kind = "service"
+
+[principals."host/codex.sea.fudo.org"]
+kind = "service"
+
+[principals."host/fimbria.sea.fudo.org"]
+kind = "service"
+
+[principals."host/fontus.sea.fudo.org"]
+kind = "service"
+
+[principals."host/forum.sea.fudo.org"]
+kind = "service"
+
+[principals."host/france.fudo.org"]
+kind = "service"
+
+[principals."host/germany.fudo.org"]
+kind = "service"
+
+[principals."host/grendal.sea.fudo.org"]
+kind = "service"
+
+[principals."host/jazz.sea.fudo.org"]
+kind = "service"
+
+[principals."host/lambda.sea.fudo.org"]
+kind = "service"
+
+[principals."host/legatus.fudo.org"]
+kind = "service"
+
+[principals."host/limina.sea.fudo.org"]
+kind = "service"
+
+[principals."host/locum.informis.land"]
+kind = "service"
+
+[principals."host/mail-container.fudo.org"]
+kind = "service"
+
+[principals."host/nameserver.fudo.org"]
+kind = "service"
+
+[principals."host/nostromo.sea.fudo.org"]
+kind = "service"
+
+[principals."host/paris.fudo.org"]
+kind = "service"
+
+[principals."host/plato.sea.fudo.org"]
+kind = "service"
+
+[principals."host/praetor.fudo.org"]
+kind = "service"
+
+[principals."host/procul.informis.land"]
+kind = "service"
+
+[principals."host/pselby-work.sea.fudo.org"]
+kind = "service"
+
+[principals."host/rama.sea.fudo.org"]
+kind = "service"
+
+[principals."host/rector.sea.fudo.org"]
+kind = "service"
+
+[principals."host/spark.sea.fudo.org"]
+kind = "service"
+
+[principals."host/system3.sea.fudo.org"]
+kind = "service"
+
+[principals."host/system7.sea.fudo.org"]
+kind = "service"
+
+[principals."host/tabula.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thing-0.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thing-1.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thing-2.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thing-3.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thing-4.sea.fudo.org"]
+kind = "service"
+
+[principals."host/thunk-0.sea.fudo.org"]
+kind = "service"
+
+[principals."host/toothless.sea.fudo.org"]
+kind = "service"
+
+[principals."host/wormhole0.sea.fudo.org"]
+kind = "service"
+
+[principals."host/zbox.sea.fudo.org"]
+kind = "service"
+
+[principals."hprop/lambda.sea.fudo.org"]
+kind = "service"
+
+[principals."hprop/legatus.fudo.org"]
+kind = "service"
+
+[principals."hprop/nostromo.sea.fudo.org"]
+kind = "service"
+
+[principals."hprop/rector.sea.fudo.org"]
+kind = "service"
+
+[principals."hprop/tabula.sea.fudo.org"]
+kind = "service"
+
+[principals."kadmin/admin@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/admin@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/admin@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/changepw@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/changepw@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/changepw@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/hprop@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/hprop@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/hprop@SEA.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."krbtgt/FUDO.ORG@FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."krbtgt/FUDO.ORG@INFORMIS.LAND"]
+kind = "cross-realm"
+peer = "INFORMIS.LAND"
+
+[principals."krbtgt/FUDO.ORG@SEA.FUDO.ORG"]
+kind = "cross-realm"
+peer = "SEA.FUDO.ORG"
+
+[principals."krbtgt/INFORMIS.LAND@FUDO.ORG"]
+kind = "cross-realm"
+peer = "INFORMIS.LAND"
+
+[principals."krbtgt/INFORMIS.LAND@INFORMIS.LAND"]
+kind = "cross-realm"
+peer = "INFORMIS.LAND"
+
+[principals."krbtgt/INFORMIS.LAND@SEA.FUDO.ORG"]
+kind = "cross-realm"
+peer = "INFORMIS.LAND"
+
+[principals."krbtgt/SEA.FUDO.ORG@FUDO.ORG"]
+kind = "cross-realm"
+peer = "SEA.FUDO.ORG"
+
+[principals."krbtgt/SEA.FUDO.ORG@INFORMIS.LAND"]
+kind = "cross-realm"
+peer = "SEA.FUDO.ORG"
+
+[principals."krbtgt/SEA.FUDO.ORG@SEA.FUDO.ORG"]
+kind = "cross-realm"
+peer = "SEA.FUDO.ORG"
+
+[principals."ldap/legatus.fudo.org"]
+kind = "service"
+
+[principals."nfs/aedile.fudo.org"]
+kind = "service"
+
+[principals."nfs/arx.fudo.org"]
+kind = "service"
+
+[principals."nfs/atom.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/cargo.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/cartus.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/cashew.fudo.org"]
+kind = "service"
+
+[principals."nfs/cellar.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/codex.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/fimbria.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/fontus.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/forum.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/france.fudo.org"]
+kind = "service"
+
+[principals."nfs/germany.fudo.org"]
+kind = "service"
+
+[principals."nfs/grendal.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/jazz.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/lambda.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/legatus.fudo.org"]
+kind = "service"
+
+[principals."nfs/limina.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/locum.informis.land"]
+kind = "service"
+
+[principals."nfs/mail-container.fudo.org"]
+kind = "service"
+
+[principals."nfs/nameserver.fudo.org"]
+kind = "service"
+
+[principals."nfs/nostromo.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/paris.fudo.org"]
+kind = "service"
+
+[principals."nfs/plato.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/praetor.fudo.org"]
+kind = "service"
+
+[principals."nfs/procul.informis.land"]
+kind = "service"
+
+[principals."nfs/pselby-work.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/rama.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/rector.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/spark.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/system3.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/system7.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/tabula.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thing-0.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thing-1.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thing-2.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thing-3.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thing-4.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/thunk-0.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/toothless.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/wormhole0.sea.fudo.org"]
+kind = "service"
+
+[principals."nfs/zbox.sea.fudo.org"]
+kind = "service"
+
+[principals."postgres/germany.fudo.org"]
+kind = "service"
+
+[principals."postgres/locum.informis.land"]
+kind = "service"
+
+[principals."postgres/nostromo.sea.fudo.org"]
+kind = "service"
+
+[principals."postgres/procul.informis.land"]
+kind = "service"
+
+[principals."postgres/rama.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/aedile.fudo.org"]
+kind = "service"
+
+[principals."ssh/arx.fudo.org"]
+kind = "service"
+
+[principals."ssh/atom.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/cartus.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/cashew.fudo.org"]
+kind = "service"
+
+[principals."ssh/cellar.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/codex.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/fimbria.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/fontus.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/forum.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/france.fudo.org"]
+kind = "service"
+
+[principals."ssh/germany.fudo.org"]
+kind = "service"
+
+[principals."ssh/grendal.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/jazz.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/lambda.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/legatus.fudo.org"]
+kind = "service"
+
+[principals."ssh/limina.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/locum.informis.land"]
+kind = "service"
+
+[principals."ssh/mail-container.fudo.org"]
+kind = "service"
+
+[principals."ssh/nameserver.fudo.org"]
+kind = "service"
+
+[principals."ssh/nostromo.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/paris.fudo.org"]
+kind = "service"
+
+[principals."ssh/plato.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/praetor.fudo.org"]
+kind = "service"
+
+[principals."ssh/procul.informis.land"]
+kind = "service"
+
+[principals."ssh/pselby-work.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/rama.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/rector.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/spark.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/system3.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/system7.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/tabula.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thing-0.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thing-1.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thing-2.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thing-3.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thing-4.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/thunk-0.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/toothless.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/wormhole0.sea.fudo.org"]
+kind = "service"
+
+[principals."ssh/zbox.sea.fudo.org"]
+kind = "service"

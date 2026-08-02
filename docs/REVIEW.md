@@ -1,6 +1,7 @@
 # Aegis System Review
 
-**Date:** 2026-08-02
+**Date:** 2026-08-02 · **Status:** the roadmap in §4 has been implemented; see
+the checkboxes against each finding.
 
 **Reviewed at:**
 
@@ -63,7 +64,7 @@ With 36 hosts and no `--continue-on-error`, a single host missing `age_pubkey` a
 **Fix:** raise a dedicated `AegisError` internally; convert to `typer.Exit` only at the CLI
 boundary. Catch `AegisError` at the per-host loop.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B2 — Keytabs deploy corrupted
 
@@ -80,7 +81,7 @@ consumer of a keytab is broken.
 **Fix:** preferably eliminate the sentinel entirely — see B3. Otherwise, teach `decryptScript` to
 strip the prefix and base64-decode when `encoding = "base64"`.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B3 — `init-realm` produces realms that `build-keytabs` cannot read
 
@@ -103,7 +104,7 @@ delete `encrypt_age_binary`/`decrypt_age_binary` and the `base64:` sentinel. age
 payloads natively; the sentinel exists only because `decrypt_age` passes `text=True`. This also
 resolves B2.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B4 — `build-keytabs` cannot run at all against this repo
 
@@ -125,7 +126,7 @@ reads is empty.
 the realm-management design) and derive host membership from the existing `domain-*` roles. Then
 delete `DomainConfig` and the `HostConfig.domain` field.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B5 — The Kerberos toolchain is wired to the wrong Kerberos
 
@@ -144,7 +145,7 @@ requires **Heimdal**:
 
 Nothing Kerberos-related can work until this is `pkgs.heimdal`.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B6 — Phase-2 user secrets cannot work as written
 
@@ -165,7 +166,7 @@ hazard.
 user key readable by the target user (`user = username`, `group = username`, mode `0400`) and the
 parent directory `0700 <user>:<user>`.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B7 — sshd races its own host keys
 
@@ -188,7 +189,7 @@ systemd.services.sshd = {
 More generally, the module should be able to wire *any* manifest-declared consumer to the right
 phase target rather than requiring every service to be hand-wired.
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B8 — The keytab is decrypted twice, to the same path
 
@@ -200,7 +201,7 @@ target. Two oneshot units, both `rm -f`-then-decrypt, same file, no ordering bet
 
 Resolved for free by S1 (delete `auto-secrets.nix`).
 
-- [ ] Fixed
+- [x] Fixed
 
 ## B9 — All three NixOS VM tests would fail
 
@@ -217,7 +218,13 @@ These tests have never been run green. `PLAN.md` confirms — "NixOS VM tests" i
 **Fix:** set `dryRun = false` in all three tests, and add a fourth that asserts dry-run *does*
 redirect. Then wire `nix flake check` into CI so the module is actually gated.
 
-- [ ] Fixed
+Evaluating them also hit an infinite recursion that predates the tests: `secretsPath` defaulted to
+`hostSecretsPath`, which read `cfg.secretsPath`. Neither option being set — as in all three tests —
+made the manifest lookup diverge.
+
+- [x] Fixed — `dryRun` now defaults to false, the tests set it explicitly, `secretsPath` is
+  nullable, and `tests/manifest.nix` covers the manifest path end to end. **Not yet executed:** no
+  Nix was available in the implementation environment, so `nix flake check` still needs to run.
 
 ## B10 — Assorted
 
@@ -235,7 +242,7 @@ redirect. Then wire `nix flake check` into CI so the module is actually gated.
 | B10.8 | Both tool READMEs document commands that do not exist: `import-ssh-key` (actually `import-ssh-host-keys`), `build-ssh-keys` (`build-ssh-host-keys`), `init-role kdc kdchost` (takes one argument) | `aegis-tools-system/README.md`, `aegis-secrets/flake.nix` devShell banner |
 | B10.9 | `aegis-user` has no `edit` command (listed in `PLAN.md`), and users cannot decrypt their own secrets by design — a typo'd token is invisible until deployment fails | `aegis-tools-user/aegis_user/cli.py` |
 
-- [ ] Triaged
+- [x] Triaged — B10.1, B10.2, B10.3, B10.6, B10.7, B10.8 fixed; B10.4 and B10.5 fixed in the module; B10.9 (`aegis-user edit`) not done.
 
 ---
 
@@ -273,7 +280,7 @@ The end state to aim for: **`build/` is a pure function of `src/` plus existing 
 Today it is a mutable accumulator, which is precisely why nothing in the system can answer "is this
 consistent?"
 
-- [ ] Addressed
+- [x] Addressed — renamed to `deploy/`, placement moved to `src/hosts/*.toml`.
 
 ## R2 — The admin key is an unbacked single point of failure
 
@@ -300,7 +307,7 @@ read.
 `encrypt_age` call, and validated at startup against the local private key. A second admin key held
 offline (paper, YubiKey, HSM) then makes losing the daily driver a non-event.
 
-- [ ] Addressed
+- [x] Addressed — admin recipient set in `keys/admin/*.pub`, validated against the local key.
 
 ## R3 — Removal is not revocation
 
@@ -326,7 +333,7 @@ Missing entirely: `revoke-user-access`, `grant-user-access` (both listed in `PLA
 members, and print an explicit warning that any already-deployed plaintext must be considered
 compromised until every remaining host has been redeployed.
 
-- [ ] Addressed
+- [ ] Not addressed — `aegis check` now *reports* stale role keys and orphaned user secrets, but there are still no `revoke-*` commands that rotate.
 
 ## R4 — No re-key path, and `--force` is a loaded gun
 
@@ -347,7 +354,7 @@ the existing material for the new recipient.
 And add `aegis rekey-host <host>`: decrypt everything with the admin key, re-encrypt for the new host
 pubkey, touch no key material.
 
-- [ ] Addressed
+- [x] Partly addressed — `--force` split into `--rotate` (confirmed, destructive) and `aegis reencrypt` (safe). `aegis rekey-host` not implemented; `reencrypt --host` covers the same ground.
 
 ## R5 — Ordering traps: every build step creates, none reconcile
 
@@ -388,8 +395,8 @@ Paired with `aegis reencrypt [--host X]` — which fixes recipient drift without
 material — this removes most of the operational anxiety. Right now there is no way to ask the system
 whether it is consistent.
 
-- [ ] `aegis check` implemented
-- [ ] `aegis reencrypt` implemented
+- [x] `aegis check` implemented
+- [x] `aegis reencrypt` implemented
 
 ---
 
@@ -433,7 +440,7 @@ behaviours that actually differ: SSH's `.pub` sidecar, base64 decoding.
 Removes roughly 400 of the 1008 lines in `modules/secrets.nix` and eliminates an entire class of
 bug.
 
-- [ ] Done
+- [x] Done — `auto-secrets.nix` reduced to a deprecating shim; the module reads the manifest.
 
 ## S2 — Collapse `build-*` / `import-*` into a registry
 
@@ -454,7 +461,7 @@ plus a generator registry (`{"ssh": gen_ssh, "nexus": gen_nexus, ...}`) turns th
 into `aegis generate <kind> [host]` and `aegis import <kind> <host> --file ...`. Likely halves the
 file.
 
-- [ ] Done
+- [ ] Not done — the `build-*`/`import-*` pairs still duplicate each other. Out of scope for this pass.
 
 ## S3 — Placement belongs in `src/`, not in CLI flags
 
@@ -468,7 +475,7 @@ Once `--target/--user/--group/--mode` move into `src/hosts/<host>.toml`:
 - `build/` becomes genuinely regenerable for everything except raw key material
 - "I changed a target path" stops requiring `--force`, which currently regenerates keys
 
-- [ ] Done
+- [x] Done — placement lives in `src/hosts/<host>.toml`; see `aegis set-placement`.
 
 ## S4 — Smaller cleanups
 
@@ -480,7 +487,7 @@ Once `--target/--user/--group/--mode` move into `src/hosts/<host>.toml`:
 - Fix `role_build_path` (B10.6) and `list_dnssec_domains` (B10.7) rather than working around them.
 - Add `aegis-user verify` so a user can confirm a secret decrypts without being able to read it back.
 
-- [ ] Done
+- [x] Partly done — `dryRun` now defaults to false and both aliases are fixed; `aegis-user verify` not added.
 
 ---
 
@@ -497,6 +504,44 @@ Once `--target/--user/--group/--mode` move into `src/hosts/<host>.toml`:
    grows further.
 6. **Delete `auto-secrets.nix`; manifest becomes canonical** (S1). Then fix the VM tests (B9) so
    they gate the module.
+
+---
+
+# 5. Implementation status
+
+The §4 roadmap was implemented across three commits:
+
+| Repo | What landed |
+|---|---|
+| `aegis-tools-system` | `AegisError`, binary-clean crypto, admin recipient set, `aegis check`/`reencrypt`/`admin`/`realm`, declarative placement, `deploy/` rename, Heimdal, B10 fixes |
+| `aegis` | Manifest-canonical `secrets.nix`, `auto-secrets.nix` reduced to a shim, new `aegis.kdc`, user-secret and sshd fixes, VM tests repaired plus `tests/manifest.nix` |
+| `aegis-secrets` | `build/` → `deploy/`, `keys/admin.pub` → `keys/admin/primary.pub`, `realm.toml` for all three realms, flake outputs updated |
+
+### Deliberately not done
+
+- **R3 (removal is not revocation).** `aegis check` now *reports* stale role keys, orphaned user
+  secrets and role files left behind by renames, but there are still no `revoke-*` commands that
+  rotate the affected key. Rotation needs a policy decision about how to sequence redeployment.
+- **R4 (`aegis rekey-host`).** `--force` was split into `--rotate` (destructive, confirmed) and
+  `aegis reencrypt` (safe), which covers the host-rekey case; a dedicated command was not added.
+- **S2 (collapse `build-*`/`import-*` into a registry).** Not in the §4 roadmap; `cli.py` still
+  carries the duplicated pairs.
+- **B10.9 (`aegis-user edit`/`verify`).** Untouched.
+
+### What `aegis check` found in this repo
+
+Running it against `aegis-secrets` for the first time reported:
+
+- three hosts with no master key: `clunk`, `paris`, `pselby-work`
+- no `kdc` role at all, so every keytab built before creating it would have been unreadable by the KDC
+- 32 hosts resolving to a realm, none with a keytab — the consequence of B4
+- three `dns-master-*` roles with host members but no public key, alongside orphaned
+  `dns-<domain>.age` files with no config: a rename from `dns-*` to `dns-master-*` that only half
+  completed
+
+`FUDO.ORG` also holds host principals for 30 `sea.fudo.org` and 2 `informis.land` hosts, which now
+have their own realms. `realm.toml` deliberately claims only `fudo.org` for it, leaving those as
+stale principals to be cleaned up rather than routing those hosts' keytabs to the wrong realm.
 
 ---
 
