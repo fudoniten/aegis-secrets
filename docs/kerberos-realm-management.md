@@ -1,6 +1,7 @@
 # Kerberos Realm Management — Design
 
-**Date:** 2026-08-02 · **Status:** proposal, nothing implemented
+**Date:** 2026-08-02 · **Status:** implemented. Section 4 notes how each piece landed; §3's
+`realm add-service` is the only command not built (`realm add-principal --host` covers it).
 
 Companion to [`REVIEW.md`](./REVIEW.md). This document proposes the realm-management feature for
 `fudoniten/aegis` + `fudoniten/aegis-tools-system`, derived from the working practice encoded in
@@ -167,7 +168,7 @@ Not vendored, and needed: **`kdc-add-principal.rb`**, **`kdc-merge-principals.rb
 Validate the implementation against the existing `SEA.FUDO.ORG` ↔ `INFORMIS.LAND` pair — that is a
 known-good bidirectional trust to diff against.
 
-### 4.3 `realm rekey-principal` — build it before you need it
+### 4.3 `realm rekey-principal` — implemented
 
 Kerberos keytabs can hold multiple kvnos, so a graceful rotation is:
 
@@ -179,6 +180,14 @@ Kerberos keytabs can hold multiple kvnos, so a graceful rotation is:
 Without this, any rotation is a hard cutover in which every service using the principal breaks until
 it receives the new keytab simultaneously. This is the difference between "rotation is routine" and
 "rotation is an outage," and it is much easier to add now than to retrofit during an incident.
+
+**Implemented.** The mechanism turned out simpler than expected: `kadmin ext_keytab` *appends* to a
+keytab rather than truncating it, so no keytab-merging tool is needed. `rekey-principal` archives the
+current dump line under `principals/previous/`, rotates the key with `kadmin passwd --random-key`
+(via a new `kdc-rekey-principal.rb`), and `build-keytabs` extracts the archived principals from a
+second throwaway database into the same keytab file — leaving both kvnos in place. `--prune` drops
+the old key once every affected host has been redeployed, and `aegis check` reports principals still
+mid-rotation so an unfinished rotation cannot be forgotten.
 
 ### 4.4 `realm export` + an `aegis.kdc` NixOS module — the missing half
 
