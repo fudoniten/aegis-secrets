@@ -3,6 +3,7 @@ services = [
     "ssh",
 ]
 filesystem_keys = []
-domain = "sea.fudo.org"
+status = "retired"
+note = "work laptop returned"
 
 [extra_secrets]

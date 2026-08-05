@@ -3,6 +3,7 @@ services = [
     "ssh",
 ]
 filesystem_keys = []
-domain = "fudo.org"
+status = "external"
+note = "container on germany; no secrets delivered directly"
 
 [extra_secrets]
