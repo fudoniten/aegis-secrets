@@ -1,3 +1,4 @@
+domain = "fudo.live"
 algorithm = "ECDSAP256SHA256"
 algorithm_num = 13
 keytag = 4933

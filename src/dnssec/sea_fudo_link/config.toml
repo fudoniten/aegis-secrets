@@ -1,3 +1,4 @@
+domain = "sea.fudo.link"
 algorithm = "ECDSAP256SHA256"
 algorithm_num = 13
 keytag = 19195

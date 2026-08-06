@@ -1,3 +1,4 @@
+domain = "fudo.ca"
 algorithm = "ECDSAP256SHA256"
 algorithm_num = 13
 keytag = 5437
