@@ -1,1 +1,4 @@
-hosts = []
+hosts = [
+    "legatus",
+    "nostromo",
+]

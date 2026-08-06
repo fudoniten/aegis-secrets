@@ -10,7 +10,6 @@ domains = [
 kdc_role = "kdc"
 trusts = [
     "FUDO.ORG",
-    "INFORMIS.LAND",
 ]
 
 [principals."WELLKNOWN/ANONYMOUS@SEA.FUDO.ORG"]
@@ -140,17 +139,9 @@ kind = "infrastructure"
 kind = "cross-realm"
 peer = "FUDO.ORG"
 
-[principals."krbtgt/INFORMIS.LAND@SEA.FUDO.ORG"]
-kind = "cross-realm"
-peer = "INFORMIS.LAND"
-
 [principals."krbtgt/SEA.FUDO.ORG@FUDO.ORG"]
 kind = "cross-realm"
 peer = "FUDO.ORG"
-
-[principals."krbtgt/SEA.FUDO.ORG@INFORMIS.LAND"]
-kind = "cross-realm"
-peer = "INFORMIS.LAND"
 
 [principals."krbtgt/SEA.FUDO.ORG@SEA.FUDO.ORG"]
 kind = "infrastructure"
