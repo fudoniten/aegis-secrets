@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-Fudo Secrets Sync - Synchronize fudo-nix-entities with aegis-secrets.
+Fudo Secrets Sync - Synchronize fudo-entities with aegis-secrets.
 
 This script initializes all hosts, roles, and builds secrets by:
 1. Initializing missing Kerberos realms
-2. Initializing missing hosts with proper domain/realm settings
-3. Syncing master keys from nix-entities
-4. Initializing domain and site roles
+2. Initializing domain, site and DNS master roles
+3. Initializing missing hosts with proper domain/realm settings
+4. Syncing master keys from nix-entities
 5. Adding hosts to their respective roles
 6. Building all secrets
+
+Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
+file the dev shell generates; run this from 'nix develop', not directly.
 """
 
 import json
@@ -16,6 +19,7 @@ import os
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -98,6 +102,14 @@ class SecretsSync:
             return set()
         return {f.stem for f in roles_dir.glob("*.toml")}
     
+    def get_role_members(self, role: str) -> Set[str]:
+        """Hosts already recorded as members of a role, per src/roles/."""
+        role_toml = Path(self.aegis_system) / "src" / "roles" / f"{role}.toml"
+        if not role_toml.exists():
+            return set()
+        with open(role_toml, 'rb') as f:
+            return set(tomllib.load(f).get('hosts', []))
+
     def get_aegis_realms(self) -> Set[str]:
         """Get list of Kerberos realms already initialized."""
         realms_dir = Path(self.aegis_system) / "src" / "kerberos" / "realms"
@@ -115,7 +127,7 @@ class SecretsSync:
             for realm in new_realms:
                 info(f"  → Initializing realm: {realm}")
                 try:
-                    run_command(['aegis', 'init-realm', realm])
+                    run_command(['aegis', 'realm', 'init', realm])
                 except subprocess.CalledProcessError:
                     error(f"  ✗ Failed to initialize realm: {realm}")
             success(f"  ✓ Initialized {len(new_realms)} realm(s)")
@@ -139,7 +151,7 @@ class SecretsSync:
                 
                 info(f"  → Initializing host: {hostname} (domain={domain}, site={site}, realm={realm})")
                 
-                cmd = ['aegis', 'init-host', '--services', 'host,ssh']
+                cmd = ['aegis', 'host', 'add', '--services', 'host,ssh']
                 if domain:
                     cmd.extend(['--domain', domain])
                 cmd.append(hostname)
@@ -188,16 +200,13 @@ class SecretsSync:
             host_toml = Path(self.aegis_system) / "src" / "hosts" / f"{hostname}.toml"
             current_key = None
             if host_toml.exists():
-                with open(host_toml) as f:
-                    for line in f:
-                        if line.startswith('age_pubkey'):
-                            current_key = line.split('"')[1] if '"' in line else None
-                            break
-            
+                with open(host_toml, 'rb') as f:
+                    current_key = tomllib.load(f).get('age_pubkey')
+
             if current_key != master_key:
                 info(f"  → Updating master key for {hostname}")
                 try:
-                    run_command(['aegis', 'set-master-key', hostname, '--public-key', master_key])
+                    run_command(['aegis', 'host', 'set-key', hostname, '--public-key', master_key])
                     updated += 1
                 except subprocess.CalledProcessError:
                     warn(f"  ⚠ Failed to update master key for {hostname}")
@@ -226,7 +235,7 @@ class SecretsSync:
             for role in new_roles:
                 info(f"  → Initializing role: {role}")
                 try:
-                    run_command(['aegis', 'init-role', role])
+                    run_command(['aegis', 'role', 'init', role])
                 except subprocess.CalledProcessError:
                     error(f"  ✗ Failed to initialize role: {role}")
             success(f"  ✓ Initialized {len(new_roles)} domain role(s)")
@@ -245,7 +254,7 @@ class SecretsSync:
             for role in new_roles:
                 info(f"  → Initializing role: {role}")
                 try:
-                    run_command(['aegis', 'init-role', role])
+                    run_command(['aegis', 'role', 'init', role])
                 except subprocess.CalledProcessError:
                     error(f"  ✗ Failed to initialize role: {role}")
             success(f"  ✓ Initialized {len(new_roles)} site role(s)")
@@ -264,7 +273,7 @@ class SecretsSync:
             for role in new_roles:
                 info(f"  → Initializing role: {role}")
                 try:
-                    run_command(['aegis', 'init-role', role])
+                    run_command(['aegis', 'role', 'init', role])
                 except subprocess.CalledProcessError:
                     error(f"  ✗ Failed to initialize role: {role}")
             success(f"  ✓ Initialized {len(new_roles)} DNS master role(s)")
@@ -272,64 +281,47 @@ class SecretsSync:
             success("  ✓ All DNS master roles already initialized")
         print()
     
-    def add_hosts_to_domain_roles(self) -> None:
-        """Add hosts to their domain roles."""
-        info("Adding hosts to domain roles...")
-        
+    def add_hosts_to_roles(self, kind: str, entity_key: str, prefix: str) -> None:
+        """Add hosts to the roles derived from one of their entity fields.
+
+        Membership is read from src/roles/<role>.toml, which is where aegis
+        records it, and NOT from the per-host role key file. Two reasons:
+
+        - 'aegis host add --domain X' now records domain membership itself,
+          without writing a key. Keying off the key file would then re-run
+          'aegis role add-host', which exits 1 for a host that is already a
+          member -- reporting a failure for something that is already right.
+        - A member missing its key is not this script's problem to fix:
+          'aegis build' runs 'build role-keys', which writes a key for every
+          member that lacks one. That runs at the end of this sync.
+        """
+        info(f"Adding hosts to {kind} roles...")
+
         count = 0
         hosts_data = self.entities.get('hosts', {})
-        
+
         for hostname, host_info in hosts_data.items():
-            domain = host_info.get('domain')
-            if not domain:
+            value = host_info.get(entity_key)
+            if not value:
                 continue
-            
-            role = f"domain-{domain}"
-            role_key = Path(self.aegis_system) / "build" / "hosts" / hostname / "roles" / f"{role}.age"
-            
-            if not role_key.exists():
-                info(f"  → Adding {hostname} to {role}")
-                try:
-                    run_command(['aegis', 'add-host-to-role', role, hostname])
-                    count += 1
-                except subprocess.CalledProcessError:
-                    error(f"  ✗ Failed to add {hostname} to {role}")
-        
-        if count > 0:
-            success(f"  ✓ Added {count} host(s) to domain roles")
-        else:
-            success("  ✓ All hosts already in their domain roles")
-        print()
-    
-    def add_hosts_to_site_roles(self) -> None:
-        """Add hosts to their site roles."""
-        info("Adding hosts to site roles...")
-        
-        count = 0
-        hosts_data = self.entities.get('hosts', {})
-        
-        for hostname, host_info in hosts_data.items():
-            site = host_info.get('site')
-            if not site:
+
+            role = f"{prefix}{value}"
+            if hostname in self.get_role_members(role):
                 continue
-            
-            role = f"site-{site}"
-            role_key = Path(self.aegis_system) / "build" / "hosts" / hostname / "roles" / f"{role}.age"
-            
-            if not role_key.exists():
-                info(f"  → Adding {hostname} to {role}")
-                try:
-                    run_command(['aegis', 'add-host-to-role', role, hostname])
-                    count += 1
-                except subprocess.CalledProcessError:
-                    error(f"  ✗ Failed to add {hostname} to {role}")
-        
+
+            info(f"  → Adding {hostname} to {role}")
+            try:
+                run_command(['aegis', 'role', 'add-host', role, hostname])
+                count += 1
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to add {hostname} to {role}")
+
         if count > 0:
-            success(f"  ✓ Added {count} host(s) to site roles")
+            success(f"  ✓ Added {count} host(s) to {kind} roles")
         else:
-            success("  ✓ All hosts already in their site roles")
+            success(f"  ✓ All hosts already in their {kind} roles")
         print()
-    
+
     def build_secrets(self) -> None:
         """Build all secrets."""
         print(f"{Color.BOLD}Building secrets for all hosts…{Color.NC}")
@@ -348,7 +340,7 @@ class SecretsSync:
             if self.hosts_without_keys:
                 warn("Build completed with warnings.")
                 warn(f"Hosts without master keys could not be built: {' '.join(self.hosts_without_keys)}")
-                warn("Set master keys with: aegis set-master-key <host> --public-key 'age1...'")
+                warn("Set master keys with: aegis host set-key <host> --public-key 'age1...'")
                 print()
                 return  # Continue successfully despite build errors
             else:
@@ -369,17 +361,22 @@ class SecretsSync:
         info(f"Found {total_hosts} hosts in nix-entities")
         print()
         
-        # Initialize everything in order
+        # Roles are created before hosts on purpose: 'aegis host add --domain X'
+        # records membership in domain-X, but only if that role already exists.
+        # Creating hosts first means every new host prints "role does not exist
+        # yet" and has to be added again below.
         self.init_realms()
-        self.init_hosts()
-        self.sync_master_keys()
         self.init_domain_roles()
         self.init_site_roles()
         self.init_dns_master_roles()
-        self.add_hosts_to_domain_roles()
-        self.add_hosts_to_site_roles()
-        
-        # Build all secrets
+        self.init_hosts()
+        self.sync_master_keys()
+        self.add_hosts_to_roles("domain", "domain", "domain-")
+        self.add_hosts_to_roles("site", "site", "site-")
+
+        # Build all secrets. This also writes a role key for every member that
+        # does not have one yet, and reconciles role secrets into the manifests
+        # of hosts that just joined a role.
         self.build_secrets()
         
         print(f"{Color.GREEN}{Color.BOLD}✓ Sync complete!{Color.NC}")
