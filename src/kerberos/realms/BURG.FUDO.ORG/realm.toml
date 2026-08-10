@@ -1,0 +1,36 @@
+etypes = [
+    "aes128-cts-hmac-sha1-96",
+    "aes256-cts-hmac-sha1-96",
+]
+max_ticket_lifetime = "1w"
+max_renewable_lifetime = "1m"
+domains = []
+kdc_role = "kdc"
+trusts = []
+
+[principals."WELLKNOWN/ANONYMOUS@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/FEDERATED@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/org.h5l.fast-cookie@WELLKNOWN:ORG.H5L"]
+kind = "infrastructure"
+
+[principals."changepw/kerberos@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."default@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/admin@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/changepw@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."kadmin/hprop@BURG.FUDO.ORG"]
+kind = "infrastructure"
+
+[principals."krbtgt/BURG.FUDO.ORG@BURG.FUDO.ORG"]
+kind = "infrastructure"

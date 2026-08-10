@@ -23,4 +23,6 @@ hosts = [
     "toothless",
     "wormhole0",
     "zbox",
+    "janus",
+    "larder",
 ]

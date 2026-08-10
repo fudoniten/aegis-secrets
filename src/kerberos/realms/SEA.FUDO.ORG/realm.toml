@@ -51,11 +51,19 @@ kind = "service"
 [principals."host/grendal.sea.fudo.org"]
 kind = "service"
 
+[principals."host/janus.sea.fudo.org"]
+kind = "service"
+host = "janus"
+
 [principals."host/jazz.sea.fudo.org"]
 kind = "service"
 
 [principals."host/lambda.sea.fudo.org"]
 kind = "service"
+
+[principals."host/larder.sea.fudo.org"]
+kind = "service"
+host = "larder"
 
 [principals."host/limina.sea.fudo.org"]
 kind = "service"
@@ -266,11 +274,19 @@ kind = "service"
 [principals."ssh/grendal.sea.fudo.org"]
 kind = "service"
 
+[principals."ssh/janus.sea.fudo.org"]
+kind = "service"
+host = "janus"
+
 [principals."ssh/jazz.sea.fudo.org"]
 kind = "service"
 
 [principals."ssh/lambda.sea.fudo.org"]
 kind = "service"
+
+[principals."ssh/larder.sea.fudo.org"]
+kind = "service"
+host = "larder"
 
 [principals."ssh/limina.sea.fudo.org"]
 kind = "service"

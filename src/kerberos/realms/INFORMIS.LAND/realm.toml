@@ -1,0 +1,36 @@
+etypes = [
+    "aes128-cts-hmac-sha1-96",
+    "aes256-cts-hmac-sha1-96",
+]
+max_ticket_lifetime = "1w"
+max_renewable_lifetime = "1m"
+domains = []
+kdc_role = "kdc"
+trusts = []
+
+[principals."WELLKNOWN/ANONYMOUS@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/FEDERATED@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."WELLKNOWN/org.h5l.fast-cookie@WELLKNOWN:ORG.H5L"]
+kind = "infrastructure"
+
+[principals."changepw/kerberos@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."default@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/admin@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/changepw@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."kadmin/hprop@INFORMIS.LAND"]
+kind = "infrastructure"
+
+[principals."krbtgt/INFORMIS.LAND@INFORMIS.LAND"]
+kind = "infrastructure"
