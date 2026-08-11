@@ -2,3 +2,9 @@ hosts = [
     "telly",
     "limina",
 ]
+
+[placement."secret:gpu-node-tagger.ca-crt"]
+target = "/run/gpu-node-tagger/ca.crt"
+
+[placement."secret:gpu-node-tagger.token"]
+target = "/run/gpu-node-tagger/token"
