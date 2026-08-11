@@ -13,3 +13,5 @@ result-*
 # Temporary decrypted files (should never be committed)
 *.decrypted
 *.tmp
+__pycache__/
+*.pyc

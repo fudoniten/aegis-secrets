@@ -110,6 +110,92 @@ class SecretsSync:
         with open(role_toml, 'rb') as f:
             return set(tomllib.load(f).get('hosts', []))
 
+    def get_nebula_networks(self) -> List[str]:
+        """Nebula networks that exist in this repo.
+
+        Empty until someone runs 'aegis nebula init', which is deliberate:
+        minting a CA is a one-time act with no undo, so it is not something a
+        sync script should do on anyone's behalf.
+        """
+        networks_dir = Path(self.aegis_system) / "src" / "nebula" / "networks"
+        if not networks_dir.exists():
+            return []
+        return sorted(d.name for d in networks_dir.iterdir() if d.is_dir())
+
+    def get_nebula_members(self, network: str) -> Set[str]:
+        """Hosts already on a Nebula network, per src/nebula/networks/<n>/hosts/."""
+        hosts_dir = (Path(self.aegis_system) / "src" / "nebula" / "networks"
+                     / network / "hosts")
+        if not hosts_dir.exists():
+            return set()
+        return {f.stem for f in hosts_dir.glob("*.toml")}
+
+    def add_hosts_to_nebula(self) -> None:
+        """Put every entity host on each Nebula network.
+
+        Only hosts that are not on the network yet, so a host already added by
+        hand keeps whatever was chosen for it -- in particular --local-key,
+        which this script has no way to infer and must not override. Addresses
+        are allocated by 'aegis nebula add-host' from the site range, and never
+        change afterwards.
+
+        Lighthouses are not set here either: which host is publicly reachable
+        on a fixed address is a fact about the world, not about the entity
+        data, so it stays a deliberate 'aegis nebula add-host --lighthouse'.
+        """
+        networks = self.get_nebula_networks()
+        if not networks:
+            info("No Nebula network configured — skipping")
+            info("  Create one with: aegis nebula init <name> --cidr <cidr>")
+            print()
+            return
+
+        hosts_data = self.entities.get('hosts', {})
+
+        for network in networks:
+            info(f"Adding hosts to Nebula network '{network}'...")
+            members = self.get_nebula_members(network)
+            count = 0
+
+            for hostname, host_info in sorted(hosts_data.items()):
+                if hostname in members:
+                    continue
+
+                site = host_info.get('site') or ''
+                domain = host_info.get('domain') or ''
+
+                # Certificate groups are what Nebula firewall rules match on.
+                # Naming them after the roles this repo already uses keeps one
+                # vocabulary across both: a rule reading 'site-seattle' means
+                # the same thing as the role of that name.
+                groups = []
+                if site:
+                    groups.append(f"site-{site}")
+                if domain:
+                    groups.append(f"domain-{domain}")
+                for profile in host_info.get('profile', []) or []:
+                    groups.append(profile)
+
+                cmd = ['aegis', 'nebula', 'add-host', '--network', network]
+                if site:
+                    cmd.extend(['--site', site])
+                if groups:
+                    cmd.extend(['--groups', ','.join(groups)])
+                cmd.append(hostname)
+
+                info(f"  → Adding {hostname} to {network}")
+                try:
+                    run_command(cmd)
+                    count += 1
+                except subprocess.CalledProcessError:
+                    error(f"  ✗ Failed to add {hostname} to {network}")
+
+            if count > 0:
+                success(f"  ✓ Added {count} host(s) to {network}")
+            else:
+                success(f"  ✓ All hosts already on {network}")
+        print()
+
     def get_aegis_realms(self) -> Set[str]:
         """Get list of Kerberos realms already initialized."""
         realms_dir = Path(self.aegis_system) / "src" / "kerberos" / "realms"
@@ -373,6 +459,7 @@ class SecretsSync:
         self.sync_master_keys()
         self.add_hosts_to_roles("domain", "domain", "domain-")
         self.add_hosts_to_roles("site", "site", "site-")
+        self.add_hosts_to_nebula()
 
         # Build all secrets. This also writes a role key for every member that
         # does not have one yet, and reconciles role secrets into the manifests
