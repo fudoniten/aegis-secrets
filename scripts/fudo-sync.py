@@ -131,58 +131,31 @@ class SecretsSync:
         return {f.stem for f in hosts_dir.glob("*.toml")}
 
     def nebula_membership(self, network: str) -> Dict[str, Dict]:
-        """Hosts on a Nebula network according to the entity data.
+        """Hosts on a Nebula network, as resolved by the entities derivation.
 
         Membership needs two things to agree: the host names the network in
-        `nebula-network`, and the network's zone gives it an address. A host
-        with only one of the two is not on the mesh -- assigning the address is
-        the opt-in -- so this returns the intersection.
+        `nebula-network`, and the network's zone gives it an address. The
+        derivation resolves the address, so a null one here means the host
+        named a network but was never given one -- which is not membership.
         """
-        networks = self.entities.get('nebula', {}).get('networks', {})
-        network_opts = networks.get(network, {})
-        zone_name = network_opts.get('zone')
-        if not zone_name:
-            return {}
-
-        zone = self.entities.get('zones', {}).get(zone_name, {})
-        subdomain = network_opts.get('subdomain')
-        if subdomain:
-            zone = zone.get('subdomains', {}).get(subdomain, {})
-        zone_hosts = zone.get('hosts', {}) or {}
-
-        members = {}
-        for hostname, host_info in self.entities.get('hosts', {}).items():
-            nebula = host_info.get('nebula-network') or {}
-            if nebula.get('network') != network:
+        out = {}
+        nebula_hosts = self.entities.get('nebula', {}).get('hosts', {})
+        for hostname, deets in nebula_hosts.items():
+            if deets.get('network') != network:
                 continue
-            address = (zone_hosts.get(hostname) or {}).get('ipv4-address')
-            if not address:
+            if not deets.get('address'):
                 continue
-            members[hostname] = {
-                'address': address,
-                'lighthouse': bool(nebula.get('lighthouse')),
-                'local_key': bool(nebula.get('local-key')),
-                'extra_groups': list(nebula.get('groups') or []),
-                'site': host_info.get('site') or '',
-                'domain': host_info.get('domain') or '',
-                'profile': host_info.get('profile') or [],
-                'public_ipv4': self.host_public_ipv4(hostname, host_info),
+            out[hostname] = {
+                'address': deets['address'],
+                'lighthouse': bool(deets.get('lighthouse')),
+                'local_key': bool(deets.get('local-key')),
+                'extra_groups': list(deets.get('groups') or []),
+                'site': deets.get('site') or '',
+                'domain': deets.get('domain') or '',
+                'profile': deets.get('profile') or [],
+                'public_ipv4': deets.get('endpoint-ipv4'),
             }
-        return members
-
-    def host_public_ipv4(self, hostname: str, host_info: Dict) -> Optional[str]:
-        """A host's address in its own domain's zone.
-
-        For a lighthouse this is the endpoint every other host dials before it
-        has a tunnel, so it must be the real routable address rather than a
-        name that might one day resolve to an overlay address -- which would
-        need the tunnel it is supposed to establish.
-        """
-        domain = host_info.get('domain')
-        if not domain:
-            return None
-        zone = self.entities.get('zones', {}).get(domain, {})
-        return (zone.get('hosts', {}).get(hostname) or {}).get('ipv4-address')
+        return out
 
     def add_hosts_to_nebula(self) -> None:
         """Put the entity-declared hosts on each Nebula network.
@@ -217,6 +190,24 @@ class SecretsSync:
             existing = self.get_nebula_members(network)
             members = self.nebula_membership(network)
             count = 0
+
+            # Finding nothing is not success. The entity data reaches this
+            # script through a derivation in flake.nix and a store path fixed
+            # when the dev shell started, so there are several ways for it to
+            # arrive empty -- and reporting "all hosts already added" for an
+            # empty set sends you looking in entirely the wrong place.
+            if not members:
+                warn(f"  ⚠ No host declares network '{network}' in the entity "
+                     f"data, so there is nothing to add.")
+                warn(f"     Check what this script can actually see:")
+                warn(f"       jq '.nebula.networks' \"$AEGIS_ENTITIES_JSON\"")
+                warn(f"       jq '.nebula.hosts | length' \"$AEGIS_ENTITIES_JSON\"")
+                warn(f"     null means this repo's flake.nix predates the "
+                     f"Nebula export, or the dev shell is older than it -- "
+                     f"leave and re-enter 'nix develop'.")
+                warn(f"     Empty means the fudo-entities input predates the "
+                     f"network: 'nix flake update fudo-entities'.")
+                continue
 
             for hostname, deets in sorted(members.items()):
                 if hostname in existing:
