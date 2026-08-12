@@ -55,6 +55,47 @@
               realm =
                 if domain ? gssapi-realm then domain.gssapi-realm else null;
             }) nix-entities.entities.domains;
+            # Nebula membership, resolved here rather than in the sync
+            # script: the entity data and its lookup helpers are both to hand,
+            # and a host's overlay address lives in a DNS zone that the script
+            # would otherwise have to walk itself.
+            #
+            # NOT filtered by nixos-system, unlike `hosts` above. A machine
+            # managed outside fudo-entities can still hold a mesh identity --
+            # that is what `local-key` is for -- so filtering here would
+            # silently drop exactly the hosts the enrolment path exists to
+            # serve.
+            nebula = let
+              inherit (nix-entities) entities;
+              elib = nix-entities.lib;
+              members = pkgs.lib.filterAttrs
+                (_: host: (host.nebula-network or null) != null) entities.hosts;
+            in {
+              networks = builtins.mapAttrs (_: net: {
+                inherit (net) cidr zone;
+                port = net.port or 4242;
+                subdomain = net.subdomain or null;
+              }) (entities.nebula.networks or { });
+
+              hosts = builtins.mapAttrs (name: host: {
+                inherit (host.nebula-network) network;
+                lighthouse = host.nebula-network.lighthouse or false;
+                local-key = host.nebula-network.local-key or false;
+                groups = host.nebula-network.groups or [ ];
+                domain = host.domain or null;
+                site = host.site or null;
+                profile = host.profile or null;
+                # The overlay address, from the network's zone. Null when the
+                # host names a network but was never given an address, which
+                # is not membership.
+                address = elib.getHostNebulaIpv4 name;
+                # The routable address a lighthouse is dialled at, from its
+                # OWN domain's zone -- not the mesh zone, which would hand out
+                # an address unreachable without the tunnel it establishes.
+                endpoint-ipv4 = elib.getHostIpv4 name;
+              }) members;
+            };
+
             sites = builtins.attrNames nix-entities.entities.sites;
             realms = pkgs.lib.unique (pkgs.lib.filter (r: r != null)
               (pkgs.lib.mapAttrsToList (_: domain:
