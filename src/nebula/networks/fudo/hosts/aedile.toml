@@ -1,0 +1,6 @@
+address = "10.100.0.10"
+groups = [
+    "site-hetzner1",
+    "domain-fudo.org",
+    "server",
+]
