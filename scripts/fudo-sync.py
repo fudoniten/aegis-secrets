@@ -130,71 +130,181 @@ class SecretsSync:
             return set()
         return {f.stem for f in hosts_dir.glob("*.toml")}
 
+    def nebula_membership(self, network: str) -> Dict[str, Dict]:
+        """Hosts on a Nebula network according to the entity data.
+
+        Membership needs two things to agree: the host names the network in
+        `nebula-network`, and the network's zone gives it an address. A host
+        with only one of the two is not on the mesh -- assigning the address is
+        the opt-in -- so this returns the intersection.
+        """
+        networks = self.entities.get('nebula', {}).get('networks', {})
+        network_opts = networks.get(network, {})
+        zone_name = network_opts.get('zone')
+        if not zone_name:
+            return {}
+
+        zone = self.entities.get('zones', {}).get(zone_name, {})
+        subdomain = network_opts.get('subdomain')
+        if subdomain:
+            zone = zone.get('subdomains', {}).get(subdomain, {})
+        zone_hosts = zone.get('hosts', {}) or {}
+
+        members = {}
+        for hostname, host_info in self.entities.get('hosts', {}).items():
+            nebula = host_info.get('nebula-network') or {}
+            if nebula.get('network') != network:
+                continue
+            address = (zone_hosts.get(hostname) or {}).get('ipv4-address')
+            if not address:
+                continue
+            members[hostname] = {
+                'address': address,
+                'lighthouse': bool(nebula.get('lighthouse')),
+                'local_key': bool(nebula.get('local-key')),
+                'extra_groups': list(nebula.get('groups') or []),
+                'site': host_info.get('site') or '',
+                'domain': host_info.get('domain') or '',
+                'profile': host_info.get('profile') or [],
+                'public_ipv4': self.host_public_ipv4(hostname, host_info),
+            }
+        return members
+
+    def host_public_ipv4(self, hostname: str, host_info: Dict) -> Optional[str]:
+        """A host's address in its own domain's zone.
+
+        For a lighthouse this is the endpoint every other host dials before it
+        has a tunnel, so it must be the real routable address rather than a
+        name that might one day resolve to an overlay address -- which would
+        need the tunnel it is supposed to establish.
+        """
+        domain = host_info.get('domain')
+        if not domain:
+            return None
+        zone = self.entities.get('zones', {}).get(domain, {})
+        return (zone.get('hosts', {}).get(hostname) or {}).get('ipv4-address')
+
     def add_hosts_to_nebula(self) -> None:
-        """Put every entity host on each Nebula network.
+        """Put the entity-declared hosts on each Nebula network.
 
-        Only hosts that are not on the network yet, so a host already added by
-        hand keeps whatever was chosen for it -- in particular --local-key,
-        which this script has no way to infer and must not override. Addresses
-        are allocated by 'aegis nebula add-host' from the site range, and never
-        change afterwards.
+        Only hosts not already on the network, which is what makes re-running
+        safe. That does mean a flag changed in the entity data after a host was
+        added does not follow -- so disagreements are reported rather than
+        silently ignored.
 
-        Lighthouses are not set here either: which host is publicly reachable
-        on a fixed address is a fact about the world, not about the entity
-        data, so it stays a deliberate 'aegis nebula add-host --lighthouse'.
+        A network with members but no CA is reported too, never created:
+        minting a CA decides who can forge membership on that mesh forever, and
+        that is not a decision a sync run should make on anyone's behalf.
         """
         networks = self.get_nebula_networks()
-        if not networks:
-            info("No Nebula network configured — skipping")
-            info("  Create one with: aegis nebula init <name> --cidr <cidr>")
-            print()
-            return
+        declared = self.entities.get('nebula', {}).get('networks', {})
 
-        hosts_data = self.entities.get('hosts', {})
+        for network in sorted(declared):
+            if network not in networks:
+                members = self.nebula_membership(network)
+                warn(f"Nebula network '{network}' has {len(members)} host(s) "
+                     f"in the entity data but no CA in this repo.")
+                cidr = declared[network].get('cidr', '<cidr>')
+                warn(f"  Create it with: aegis nebula init {network} "
+                     f"--cidr {cidr}")
+                print()
+
+        if not networks:
+            return
 
         for network in networks:
             info(f"Adding hosts to Nebula network '{network}'...")
-            members = self.get_nebula_members(network)
+            existing = self.get_nebula_members(network)
+            members = self.nebula_membership(network)
             count = 0
 
-            for hostname, host_info in sorted(hosts_data.items()):
-                if hostname in members:
+            for hostname, deets in sorted(members.items()):
+                if hostname in existing:
+                    self.check_nebula_drift(network, hostname, deets)
                     continue
-
-                site = host_info.get('site') or ''
-                domain = host_info.get('domain') or ''
 
                 # Certificate groups are what Nebula firewall rules match on.
                 # Naming them after the roles this repo already uses keeps one
                 # vocabulary across both: a rule reading 'site-seattle' means
                 # the same thing as the role of that name.
                 groups = []
-                if site:
-                    groups.append(f"site-{site}")
-                if domain:
-                    groups.append(f"domain-{domain}")
-                for profile in host_info.get('profile', []) or []:
-                    groups.append(profile)
+                if deets['site']:
+                    groups.append(f"site-{deets['site']}")
+                if deets['domain']:
+                    groups.append(f"domain-{deets['domain']}")
+                profile = deets['profile']
+                groups.extend(profile if isinstance(profile, list) else [profile])
+                groups.extend(deets['extra_groups'])
 
-                cmd = ['aegis', 'nebula', 'add-host', '--network', network]
-                if site:
-                    cmd.extend(['--site', site])
+                cmd = ['aegis', 'nebula', 'add-host', '--network', network,
+                       '--address', deets['address']]
                 if groups:
-                    cmd.extend(['--groups', ','.join(groups)])
+                    cmd.extend(['--groups', ','.join(g for g in groups if g)])
+                if deets['local_key']:
+                    cmd.append('--local-key')
+                if deets['lighthouse']:
+                    cmd.append('--lighthouse')
+                    endpoint_host = deets['public_ipv4']
+                    if endpoint_host:
+                        port = declared.get(network, {}).get('port', 4242)
+                        cmd.extend(['--endpoint', f"{endpoint_host}:{port}"])
+                    else:
+                        warn(f"  ⚠ {hostname} is a lighthouse but has no address "
+                             f"in its own domain's zone; nobody can reach it")
                 cmd.append(hostname)
 
-                info(f"  → Adding {hostname} to {network}")
+                info(f"  → Adding {hostname} to {network} at {deets['address']}")
                 try:
                     run_command(cmd)
                     count += 1
                 except subprocess.CalledProcessError:
                     error(f"  ✗ Failed to add {hostname} to {network}")
 
+            # A host removed from the entity data keeps its certificate until
+            # someone says otherwise: dropping it is a revocation, and this
+            # script does not revoke.
+            orphans = existing - set(members)
+            if orphans:
+                warn(f"  ⚠ on {network} but no longer in the entity data: "
+                     f"{' '.join(sorted(orphans))}")
+                warn(f"     They keep their certificates. To remove one, "
+                     f"blocklist it and delete its host file.")
+
             if count > 0:
                 success(f"  ✓ Added {count} host(s) to {network}")
             else:
                 success(f"  ✓ All hosts already on {network}")
-        print()
+
+    def check_nebula_drift(self, network: str, hostname: str,
+                           deets: Dict) -> None:
+        """Report entity data that disagrees with what Aegis already has.
+
+        Hosts are only ever added, never rewritten, so a flag flipped in the
+        entity data after the fact would otherwise take effect nowhere and say
+        nothing.
+        """
+        host_toml = (Path(self.aegis_system) / "src" / "nebula" / "networks"
+                     / network / "hosts" / f"{hostname}.toml")
+        if not host_toml.exists():
+            return
+        with open(host_toml, 'rb') as f:
+            current = tomllib.load(f)
+
+        for field, want, have in (
+            ('address', deets['address'], current.get('address')),
+            ('lighthouse', deets['lighthouse'],
+             bool(current.get('lighthouse', False))),
+            ('local_key', deets['local_key'],
+             bool(current.get('local_key', False))),
+        ):
+            if want != have:
+                warn(f"  ⚠ {hostname}: entities say {field}={want}, "
+                     f"aegis has {have}")
+                if field == 'address':
+                    warn(f"     Edit {host_toml} and re-sign: the address is "
+                         f"baked into the certificate.")
+                else:
+                    warn(f"     Edit {host_toml} to change it.")
 
     def get_aegis_realms(self) -> Set[str]:
         """Get list of Kerberos realms already initialized."""
