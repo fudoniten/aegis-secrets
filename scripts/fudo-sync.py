@@ -191,6 +191,24 @@ class SecretsSync:
             members = self.nebula_membership(network)
             count = 0
 
+            # Finding nothing is not success. The entity data reaches this
+            # script through a derivation in flake.nix and a store path fixed
+            # when the dev shell started, so there are several ways for it to
+            # arrive empty -- and reporting "all hosts already added" for an
+            # empty set sends you looking in entirely the wrong place.
+            if not members:
+                warn(f"  ⚠ No host declares network '{network}' in the entity "
+                     f"data, so there is nothing to add.")
+                warn(f"     Check what this script can actually see:")
+                warn(f"       jq '.nebula.networks' \"$AEGIS_ENTITIES_JSON\"")
+                warn(f"       jq '.nebula.hosts | length' \"$AEGIS_ENTITIES_JSON\"")
+                warn(f"     null means this repo's flake.nix predates the "
+                     f"Nebula export, or the dev shell is older than it -- "
+                     f"leave and re-enter 'nix develop'.")
+                warn(f"     Empty means the fudo-entities input predates the "
+                     f"network: 'nix flake update fudo-entities'.")
+                continue
+
             for hostname, deets in sorted(members.items()):
                 if hostname in existing:
                     self.check_nebula_drift(network, hostname, deets)
