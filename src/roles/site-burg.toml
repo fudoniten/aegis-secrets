@@ -1,4 +1,5 @@
 hosts = [
     "limina",
     "telly",
+    "forge",
 ]
