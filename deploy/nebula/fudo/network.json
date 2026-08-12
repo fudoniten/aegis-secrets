@@ -1,0 +1,348 @@
+{
+  "network": "fudo",
+  "cidr": "10.100.0.0/16",
+  "prefixLength": 16,
+  "port": 4242,
+  "hosts": {
+    "aedile": {
+      "address": "10.100.0.1",
+      "groups": [
+        "site-hetzner1",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "arx": {
+      "address": "10.100.0.2",
+      "groups": [
+        "site-iwebfusion0",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "cellar": {
+      "address": "10.100.0.3",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "clunk": {
+      "address": "10.100.0.4",
+      "groups": [
+        "site-russell",
+        "domain-rus.selby.ca"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "fimbria": {
+      "address": "10.100.0.5",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "forge": {
+      "address": "10.100.0.6",
+      "groups": [
+        "site-burg",
+        "domain-burg.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "forum": {
+      "address": "10.100.0.7",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "france": {
+      "address": "10.100.0.8",
+      "groups": [
+        "site-portage",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "germany": {
+      "address": "10.100.0.9",
+      "groups": [
+        "site-portage",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "grendal": {
+      "address": "10.100.0.10",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "janus": {
+      "address": "10.100.0.11",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "jazz": {
+      "address": "10.100.0.12",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "lambda": {
+      "address": "10.100.0.13",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "larder": {
+      "address": "10.100.0.14",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "legatus": {
+      "address": "10.100.0.15",
+      "groups": [
+        "site-worldstream",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "limina": {
+      "address": "10.100.0.16",
+      "groups": [
+        "site-burg",
+        "domain-burg.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "locum": {
+      "address": "10.100.0.17",
+      "groups": [
+        "site-worldstream-1",
+        "domain-informis.land"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "nostromo": {
+      "address": "10.100.0.18",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "praetor": {
+      "address": "10.100.0.19",
+      "groups": [
+        "site-hetzner0",
+        "domain-fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "procul": {
+      "address": "10.100.0.20",
+      "groups": [
+        "site-joes-datacenter-0",
+        "domain-informis.land"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "rama": {
+      "address": "10.100.0.21",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "rector": {
+      "address": "10.100.0.22",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "system3": {
+      "address": "10.100.0.23",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "system7": {
+      "address": "10.100.0.24",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "telly": {
+      "address": "10.100.0.25",
+      "groups": [
+        "site-burg",
+        "domain-burg.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thing-0": {
+      "address": "10.100.0.26",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thing-1": {
+      "address": "10.100.0.27",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thing-2": {
+      "address": "10.100.0.28",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thing-3": {
+      "address": "10.100.0.29",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thing-4": {
+      "address": "10.100.0.30",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "thunk-0": {
+      "address": "10.100.0.31",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "toothless": {
+      "address": "10.100.0.32",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "wormhole0": {
+      "address": "10.100.0.33",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "zbox": {
+      "address": "10.100.0.34",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    }
+  }
+}

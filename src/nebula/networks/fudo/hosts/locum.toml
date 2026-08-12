@@ -1,0 +1,5 @@
+address = "10.100.0.17"
+groups = [
+    "site-worldstream-1",
+    "domain-informis.land",
+]

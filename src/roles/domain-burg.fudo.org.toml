@@ -1,6 +1,7 @@
 hosts = [
-    "telly",
+    "forge",
     "limina",
+    "telly",
 ]
 
 [placement."secret:gpu-node-tagger.ca-crt"]

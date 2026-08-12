@@ -1,0 +1,5 @@
+cidr = "10.100.0.0/16"
+port = 4242
+ca_duration = "87600h"
+cert_duration = "43800h"
+cert_version = 1
