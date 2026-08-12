@@ -73,6 +73,17 @@
       "endpoints": [],
       "localKey": false
     },
+    "forge": {
+      "address": "10.100.1.3",
+      "groups": [
+        "site-burg",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
     "forum": {
       "address": "10.100.10.10",
       "groups": [
