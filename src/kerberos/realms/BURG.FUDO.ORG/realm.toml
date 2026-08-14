@@ -4,8 +4,10 @@ etypes = [
 ]
 max_ticket_lifetime = "1w"
 max_renewable_lifetime = "1m"
-domains = []
-kdc_role = "kdc"
+domains = [
+    "burg.fudo.org",
+]
+kdc_role = "burg-kdc"
 trusts = []
 
 [principals."WELLKNOWN/ANONYMOUS@BURG.FUDO.ORG"]
@@ -23,6 +25,34 @@ kind = "infrastructure"
 [principals."default@BURG.FUDO.ORG"]
 kind = "infrastructure"
 
+[principals."host/forge.burg.fudo.org"]
+kind = "service"
+host = "forge"
+
+[principals."host/jazz.burg.fudo.org"]
+kind = "service"
+host = "jazz"
+
+[principals."host/limina.burg.fudo.org"]
+kind = "service"
+host = "limina"
+
+[principals."host/rector.burg.fudo.org"]
+kind = "service"
+host = "rector"
+
+[principals."host/telly.burg.fudo.org"]
+kind = "service"
+host = "telly"
+
+[principals."host/thing-3.burg.fudo.org"]
+kind = "service"
+host = "thing-3"
+
+[principals."host/thing-4.burg.fudo.org"]
+kind = "service"
+host = "thing-4"
+
 [principals."kadmin/admin@BURG.FUDO.ORG"]
 kind = "infrastructure"
 
@@ -34,3 +64,31 @@ kind = "infrastructure"
 
 [principals."krbtgt/BURG.FUDO.ORG@BURG.FUDO.ORG"]
 kind = "infrastructure"
+
+[principals."ssh/forge.burg.fudo.org"]
+kind = "service"
+host = "forge"
+
+[principals."ssh/jazz.burg.fudo.org"]
+kind = "service"
+host = "jazz"
+
+[principals."ssh/limina.burg.fudo.org"]
+kind = "service"
+host = "limina"
+
+[principals."ssh/rector.burg.fudo.org"]
+kind = "service"
+host = "rector"
+
+[principals."ssh/telly.burg.fudo.org"]
+kind = "service"
+host = "telly"
+
+[principals."ssh/thing-3.burg.fudo.org"]
+kind = "service"
+host = "thing-3"
+
+[principals."ssh/thing-4.burg.fudo.org"]
+kind = "service"
+host = "thing-4"
