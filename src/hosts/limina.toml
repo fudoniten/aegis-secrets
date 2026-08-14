@@ -6,3 +6,15 @@ filesystem_keys = []
 age_pubkey = "age1x09u4nn0j5ezjg9dvhhfkgk5txekhsz68znj3ew8tkazffv3da5qadqjwd"
 
 [extra_secrets]
+
+[placement.nexus-key]
+target = "/run/aegis/nexus-key"
+user = "root"
+group = "root"
+mode = "0400"
+
+[placement.ssh-host-keys]
+target_dir = "/run/aegis/ssh"
+user = "root"
+group = "root"
+mode = "0600"
