@@ -4,4 +4,7 @@ hosts = [
     "rector",
     "thing-3",
     "thing-4",
+    "forge",
+    "nomenclator-0",
+    "telly",
 ]

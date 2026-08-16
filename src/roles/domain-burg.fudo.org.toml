@@ -1,9 +1,14 @@
 hosts = [
     "forge",
-    "limina",
-    "telly",
     "jazz",
+    "legio-0",
+    "legio-1",
+    "limina",
+    "nomenclator-0",
+    "nomenclator-1",
+    "nomenclator-2",
     "rector",
+    "telly",
     "thing-3",
     "thing-4",
 ]

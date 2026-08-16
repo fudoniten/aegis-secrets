@@ -37,6 +37,10 @@ host = "jazz"
 kind = "service"
 host = "limina"
 
+[principals."host/nomenclator-0.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-0"
+
 [principals."host/rector.burg.fudo.org"]
 kind = "service"
 host = "rector"
@@ -76,6 +80,10 @@ host = "jazz"
 [principals."ssh/limina.burg.fudo.org"]
 kind = "service"
 host = "limina"
+
+[principals."ssh/nomenclator-0.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-0"
 
 [principals."ssh/rector.burg.fudo.org"]
 kind = "service"
