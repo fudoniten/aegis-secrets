@@ -1,3 +1,9 @@
 hosts = [
     "nomenclator-0",
 ]
+
+[placement."secret:adguard.passwd"]
+target = "/run/dns/adguard.passwd"
+user = "root"
+group = "root"
+mode = "0400"
