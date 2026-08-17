@@ -6,3 +6,9 @@ filesystem_keys = []
 age_pubkey = "age1knz3y9vn3zzvw2pvkf6h05lhe4pyjya9skd6k0lstrgv83vhkpjs8s0edr"
 
 [extra_secrets]
+
+[placement.ssh-host-keys]
+target_dir = "/run/aegis/ssh"
+user = "root"
+group = "root"
+mode = "0600"
