@@ -7,4 +7,5 @@ hosts = [
     "forge",
     "nomenclator-0",
     "telly",
+    "legio-0",
 ]
