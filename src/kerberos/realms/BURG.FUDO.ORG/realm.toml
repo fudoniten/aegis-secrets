@@ -37,6 +37,10 @@ host = "jazz"
 kind = "service"
 host = "legio-0"
 
+[principals."host/legio-1.burg.fudo.org"]
+kind = "service"
+host = "legio-1"
+
 [principals."host/limina.burg.fudo.org"]
 kind = "service"
 host = "limina"
@@ -84,6 +88,10 @@ host = "jazz"
 [principals."ssh/legio-0.burg.fudo.org"]
 kind = "service"
 host = "legio-0"
+
+[principals."ssh/legio-1.burg.fudo.org"]
+kind = "service"
+host = "legio-1"
 
 [principals."ssh/limina.burg.fudo.org"]
 kind = "service"

@@ -8,4 +8,5 @@ hosts = [
     "nomenclator-0",
     "telly",
     "legio-0",
+    "legio-1",
 ]
