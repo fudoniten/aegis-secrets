@@ -9,4 +9,5 @@ hosts = [
     "telly",
     "legio-0",
     "legio-1",
+    "magis-0",
 ]

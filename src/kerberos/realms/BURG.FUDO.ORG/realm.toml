@@ -45,6 +45,10 @@ host = "legio-1"
 kind = "service"
 host = "limina"
 
+[principals."host/magis-0.burg.fudo.org"]
+kind = "service"
+host = "magis-0"
+
 [principals."host/nomenclator-0.burg.fudo.org"]
 kind = "service"
 host = "nomenclator-0"
@@ -96,6 +100,10 @@ host = "legio-1"
 [principals."ssh/limina.burg.fudo.org"]
 kind = "service"
 host = "limina"
+
+[principals."ssh/magis-0.burg.fudo.org"]
+kind = "service"
+host = "magis-0"
 
 [principals."ssh/nomenclator-0.burg.fudo.org"]
 kind = "service"
