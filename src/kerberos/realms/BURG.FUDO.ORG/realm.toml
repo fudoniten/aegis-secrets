@@ -49,6 +49,10 @@ host = "limina"
 kind = "service"
 host = "magis-0"
 
+[principals."host/magis-1.burg.fudo.org"]
+kind = "service"
+host = "magis-1"
+
 [principals."host/nomenclator-0.burg.fudo.org"]
 kind = "service"
 host = "nomenclator-0"
@@ -104,6 +108,10 @@ host = "limina"
 [principals."ssh/magis-0.burg.fudo.org"]
 kind = "service"
 host = "magis-0"
+
+[principals."ssh/magis-1.burg.fudo.org"]
+kind = "service"
+host = "magis-1"
 
 [principals."ssh/nomenclator-0.burg.fudo.org"]
 kind = "service"

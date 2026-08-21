@@ -10,4 +10,5 @@ hosts = [
     "legio-0",
     "legio-1",
     "magis-0",
+    "magis-1",
 ]

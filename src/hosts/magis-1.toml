@@ -1,0 +1,8 @@
+services = [
+    "host",
+    "ssh",
+]
+filesystem_keys = []
+age_pubkey = "age1fhhtkz2pkwpz5zdzkxfys5xl5rp00khmwu0y4zc2ufhv6dqkz9qquxvz4j"
+
+[extra_secrets]
