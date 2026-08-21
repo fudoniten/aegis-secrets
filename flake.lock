@@ -288,11 +288,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1787280549,
-        "narHash": "sha256-8Atl9E7pylTqRVujuForTJlVZhPyBGiKMaDUuOuV5Mc=",
+        "lastModified": 1787290831,
+        "narHash": "sha256-Wf6XeaDg5U7ySuyS80H09P5x9rKSDs3O4tE29eMMgIQ=",
         "ref": "refs/heads/master",
-        "rev": "cf0b399ceb1bc555caed7f6b1aacfa836a53850e",
-        "revCount": 438,
+        "rev": "46f8f6df076f67372b28c60da3e7c63e359c9b65",
+        "revCount": 440,
         "type": "git",
         "url": "ssh://git@github.com/fudoniten/fudo-entities"
       },
