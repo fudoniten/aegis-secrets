@@ -13,6 +13,7 @@ hosts = [
     "telly",
     "thing-3",
     "thing-4",
+    "system7",
 ]
 
 [placement."secret:gpu-node-tagger.ca-crt"]

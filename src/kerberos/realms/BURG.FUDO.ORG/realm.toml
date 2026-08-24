@@ -61,6 +61,10 @@ host = "nomenclator-0"
 kind = "service"
 host = "rector"
 
+[principals."host/system7.burg.fudo.org"]
+kind = "service"
+host = "system7"
+
 [principals."host/telly.burg.fudo.org"]
 kind = "service"
 host = "telly"
@@ -120,6 +124,10 @@ host = "nomenclator-0"
 [principals."ssh/rector.burg.fudo.org"]
 kind = "service"
 host = "rector"
+
+[principals."ssh/system7.burg.fudo.org"]
+kind = "service"
+host = "system7"
 
 [principals."ssh/telly.burg.fudo.org"]
 kind = "service"
