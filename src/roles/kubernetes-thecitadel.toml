@@ -1,0 +1,12 @@
+hosts = [
+    "legio-0",
+    "legio-1",
+    "magis-0",
+    "magis-1",
+]
+
+[placement."secret:nvidia-tagger.token"]
+target = "/run/kubernetes-secrets/nvidia-tagger.token"
+user = "root"
+group = "root"
+mode = "0400"
