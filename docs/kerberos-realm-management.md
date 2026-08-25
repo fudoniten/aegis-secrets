@@ -82,12 +82,23 @@ trusts   = ["INFORMIS.LAND", "FUDO.ORG"]
 # Principal index — canonical names, not filename-encoded
 [principals."postgres/rama.sea.fudo.org"]
 kind = "service"
-host = "rama"          # include in rama's keytab
+host = "rama"          # belongs to rama; names the hosts a rekey affects
 
 [principals."krbtgt/INFORMIS.LAND@SEA.FUDO.ORG"]
 kind = "cross-realm"
 peer = "INFORMIS.LAND"
+
+# Named keytabs: an explicit principal list, as opposed to the host keytab's
+# implicit "<service>/<fqdn> for the services this host declares".
+[keytabs.hermes]
+principals = ["hermes/hermes.sea.fudo.org"]
+roles      = ["hermes"]   # or hosts = [...]; neither means export-only
 ```
+
+Note that `host =` on a principal does **not** put it in that host's keytab —
+it records ownership, so `rekey-principal` can report which hosts a rotation
+affects. A principal reaches a keytab either by being `<service>/<fqdn>` for a
+service in `src/hosts/<host>.toml`, or by being named in a `[keytabs]` entry.
 
 This buys three things:
 

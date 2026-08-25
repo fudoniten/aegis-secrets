@@ -18,6 +18,7 @@ aegis-secrets/
 │   └── kerberos/
 │       └── realms/
 │           └── <REALM>/
+│               ├── realm.toml    # Realm metadata, incl. [keytabs] declarations
 │               ├── realm.key.age # Encrypted realm master key
 │               └── principals/   # Encrypted principal keys
 ├── keys/
@@ -29,6 +30,7 @@ aegis-secrets/
     │   └── <hostname>/
     │       ├── ssh-keys.age      # Encrypted for host + admin
     │       ├── keytab.age        # Encrypted for host + KDC role + admin
+    │       ├── keytabs/          # Named keytabs, encrypted for host + admin
     │       └── users/
     │           └── <username>/
     │               ├── env/      # User env vars for this host
@@ -38,7 +40,11 @@ aegis-secrets/
     │       └── ...
     ├── roles/
     │   ├── <role>.age            # Role private key
-    │   └── <role>.pub            # Role public key
+    │   ├── <role>.pub            # Role public key
+    │   └── <role>/keytabs/       # Named keytabs, encrypted for role + admin
+    ├── keytabs/                  # Named keytabs aegis builds but does not
+    │                             # deploy; encrypted for admin only, collected
+    │                             # with `aegis keytab export`
     └── kdc/
         └── <REALM>-principals.age # All principals for KDC
 ```
