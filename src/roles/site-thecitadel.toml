@@ -12,4 +12,5 @@ hosts = [
     "magis-0",
     "magis-1",
     "system7",
+    "cogito-0",
 ]

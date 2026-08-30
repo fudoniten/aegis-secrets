@@ -25,6 +25,10 @@ kind = "infrastructure"
 [principals."default@BURG.FUDO.ORG"]
 kind = "infrastructure"
 
+[principals."host/cogito-0.burg.fudo.org"]
+kind = "service"
+host = "cogito-0"
+
 [principals."host/forge.burg.fudo.org"]
 kind = "service"
 host = "forge"
@@ -88,6 +92,10 @@ kind = "infrastructure"
 
 [principals."krbtgt/BURG.FUDO.ORG@BURG.FUDO.ORG"]
 kind = "infrastructure"
+
+[principals."ssh/cogito-0.burg.fudo.org"]
+kind = "service"
+host = "cogito-0"
 
 [principals."ssh/forge.burg.fudo.org"]
 kind = "service"

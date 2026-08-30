@@ -9,11 +9,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787511013,
-        "narHash": "sha256-nrbgF2+UtB0/ZXbSkDsU/N57vSgfuu6kR8NXpPdLDLE=",
+        "lastModified": 1787640342,
+        "narHash": "sha256-7gVv+rh6uJOgHtM8t70f+ZB0mAYRnATKrdi7ONghMek=",
         "owner": "fudoniten",
         "repo": "aegis-tools-system",
-        "rev": "3ac9204337650491b57775b29751ce5a5e6c956f",
+        "rev": "f39f0ceea10f538a42dc2561efbd2940a5e56ce6",
         "type": "github"
       },
       "original": {
@@ -288,11 +288,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1787534825,
-        "narHash": "sha256-7zHTa2a7nzDvB3B683UmTVK9WbU++pu1EpXnrJ+RZus=",
+        "lastModified": 1788113760,
+        "narHash": "sha256-BTC42ew1O2mfYKcK43AD+QwJq/Qh713YKHNfmhjoUeA=",
         "ref": "refs/heads/master",
-        "rev": "d77d830c3800ce5ab039f45f301e643f469f4d75",
-        "revCount": 443,
+        "rev": "afc5568e36d216226753efc3f81b668070197f99",
+        "revCount": 445,
         "type": "git",
         "url": "ssh://git@github.com/fudoniten/fudo-entities"
       },

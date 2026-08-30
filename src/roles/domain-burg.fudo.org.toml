@@ -1,4 +1,5 @@
 hosts = [
+    "cogito-0",
     "forge",
     "jazz",
     "legio-0",
@@ -10,10 +11,10 @@ hosts = [
     "nomenclator-1",
     "nomenclator-2",
     "rector",
+    "system7",
     "telly",
     "thing-3",
     "thing-4",
-    "system7",
 ]
 
 [placement."secret:gpu-node-tagger.ca-crt"]
