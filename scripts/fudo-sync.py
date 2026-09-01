@@ -7,8 +7,9 @@ This script initializes all hosts, roles, and builds secrets by:
 2. Initializing domain, site and DNS master roles
 3. Initializing missing hosts with proper domain/realm settings
 4. Syncing master keys from nix-entities
-5. Adding hosts to their respective roles
-6. Building all secrets
+5. Migrating Nexus keys to the ed25519 (/api/v3) format
+6. Adding hosts to their respective roles
+7. Building all secrets
 
 Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
 file the dev shell generates; run this from 'nix develop', not directly.
@@ -411,6 +412,72 @@ class SecretsSync:
         self.hosts_without_keys = missing_keys
         print()
     
+    def get_nexus_key_format(self, hostname: str) -> Optional[str]:
+        """Format of a host's [nexus-key] manifest entry: "hmac", "ed25519",
+        or None if the host has no Nexus key at all yet."""
+        manifest_toml = Path(self.aegis_system) / "deploy" / "hosts" / hostname / "secrets.toml"
+        if not manifest_toml.exists():
+            return None
+        with open(manifest_toml, 'rb') as f:
+            data = tomllib.load(f)
+        nexus_key = data.get('nexus-key')
+        if not nexus_key:
+            return None
+        return nexus_key.get('type') or 'hmac'
+
+    def build_nexus_pubkeys(self) -> None:
+        """Move every host from Nexus's legacy HMAC key to an Ed25519
+        keypair, for the public-key-authenticated /api/v3 API.
+
+        Idempotent, like every other step here: a host already on ed25519 is
+        left alone, so re-running this after the fleet has been migrated is a
+        no-op. A host with no key yet gets one in ed25519 directly, rather
+        than an hmac key this would just rotate away on the next run.
+
+        Generating the key does not by itself change what a deployed host
+        does -- nothing reads it until that host's NixOS config is next
+        rebuilt against this repo. Redeploy the Nexus server(s) first when
+        that happens, so /api/v3 already recognizes a host's public key
+        before that host starts signing with the matching private one
+        (AEGIS-MIGRATION.md §3.2).
+        """
+        info("Migrating Nexus keys to the ed25519 (/api/v3) format...")
+
+        existing_hosts = self.get_aegis_hosts()
+        hosts_data = self.entities.get('hosts', {})
+
+        migrated = 0
+        already = 0
+        failed = []
+
+        for hostname in sorted(hosts_data):
+            if hostname not in existing_hosts:
+                continue
+
+            if self.get_nexus_key_format(hostname) == 'ed25519':
+                already += 1
+                continue
+
+            info(f"  → Generating ed25519 Nexus key for {hostname}")
+            try:
+                run_command(['aegis', 'build', 'nexus-keys', '--host', hostname,
+                             '--format', 'ed25519', '--rotate', '--yes'])
+                migrated += 1
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to generate ed25519 Nexus key for {hostname}")
+                failed.append(hostname)
+
+        if migrated > 0:
+            success(f"  ✓ Migrated {migrated} host(s) to the ed25519 Nexus key format")
+            warn(f"     Redeploy the nexus server(s) before any of these hosts, "
+                 f"so /api/v3 already knows their public key "
+                 f"(AEGIS-MIGRATION.md §3.2).")
+        if already > 0:
+            success(f"  ✓ {already} host(s) already on the ed25519 format")
+        if failed:
+            warn(f"  ⚠ Failed for: {' '.join(failed)}")
+        print()
+
     def init_domain_roles(self) -> None:
         """Initialize domain roles."""
         info("Checking domain roles...")
@@ -558,6 +625,7 @@ class SecretsSync:
         self.init_dns_master_roles()
         self.init_hosts()
         self.sync_master_keys()
+        self.build_nexus_pubkeys()
         self.add_hosts_to_roles("domain", "domain", "domain-")
         self.add_hosts_to_roles("site", "site", "site-")
         self.add_hosts_to_nebula()
