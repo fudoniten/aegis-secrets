@@ -71,6 +71,10 @@ kind = "service"
 [principals."host/nostromo.sea.fudo.org"]
 kind = "service"
 
+[principals."host/pantry.sea.fudo.org"]
+kind = "service"
+host = "pantry"
+
 [principals."host/plato.sea.fudo.org"]
 kind = "service"
 
@@ -293,6 +297,10 @@ kind = "service"
 
 [principals."ssh/nostromo.sea.fudo.org"]
 kind = "service"
+
+[principals."ssh/pantry.sea.fudo.org"]
+kind = "service"
+host = "pantry"
 
 [principals."ssh/plato.sea.fudo.org"]
 kind = "service"

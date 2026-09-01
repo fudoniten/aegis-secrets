@@ -25,4 +25,5 @@ hosts = [
     "zbox",
     "janus",
     "larder",
+    "pantry",
 ]
