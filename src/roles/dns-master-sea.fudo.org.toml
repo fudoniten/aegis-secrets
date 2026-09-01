@@ -1,1 +1,3 @@
-hosts = ["aedile"]
+hosts = [
+    "forum",
+]
