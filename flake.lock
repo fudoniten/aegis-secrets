@@ -9,11 +9,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787640342,
-        "narHash": "sha256-7gVv+rh6uJOgHtM8t70f+ZB0mAYRnATKrdi7ONghMek=",
+        "lastModified": 1788307160,
+        "narHash": "sha256-88wJKu0i/6DEbwXsvGr5D9lGiIQ7S7LO1IYKgn8Zhro=",
         "owner": "fudoniten",
         "repo": "aegis-tools-system",
-        "rev": "f39f0ceea10f538a42dc2561efbd2940a5e56ce6",
+        "rev": "fee7d0082646edae57cfc47830ebdb95a018585b",
         "type": "github"
       },
       "original": {
@@ -269,11 +269,11 @@
         "utils": "utils_4"
       },
       "locked": {
-        "lastModified": 1782878150,
-        "narHash": "sha256-jD5KOjvT4zhLKb0NCARLbs3IPX/XxTxJJjhbvh53B3M=",
+        "lastModified": 1788294082,
+        "narHash": "sha256-bHXV3h2+Uk11l6RV14/xY9tiMwDDs0fvrgJbvcU3ybo=",
         "owner": "fudoniten",
         "repo": "nexus",
-        "rev": "b137b8bc8e8aa0016ed8d67033e45da49430f07c",
+        "rev": "3981451321b609c47a9e27ea5b601dde651bd1d2",
         "type": "github"
       },
       "original": {
