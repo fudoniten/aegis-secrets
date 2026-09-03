@@ -12,6 +12,7 @@ hosts = [
     "larder",
     "limina",
     "nostromo",
+    "pantry",
     "rama",
     "rector",
     "system3",
