@@ -9,7 +9,8 @@ This script initializes all hosts, roles, and builds secrets by:
 4. Syncing master keys from nix-entities
 5. Migrating Nexus keys to the ed25519 (/api/v3) format
 6. Adding hosts to their respective roles
-7. Building all secrets
+7. Ensuring sea/burg hosts declare an 'nfs' Kerberos service
+8. Building all secrets
 
 Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
 file the dev shell generates; run this from 'nix develop', not directly.
@@ -23,6 +24,12 @@ import sys
 import tomllib
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+
+
+#: Domains whose hosts sit on a local network and so are expected to use NFS.
+#: 'sea.fudo.org' uses it today; 'burg.fudo.org' doesn't yet, but there's no
+#: harm in every host there having the principal ready before it does.
+LOCAL_NETWORK_DOMAINS = {"sea.fudo.org", "burg.fudo.org"}
 
 
 # Colors for output
@@ -338,8 +345,11 @@ class SecretsSync:
                 realm = host_info.get('realm', '')
                 
                 info(f"  → Initializing host: {hostname} (domain={domain}, site={site}, realm={realm})")
-                
-                cmd = ['aegis', 'host', 'add', '--services', 'host,ssh']
+
+                services = ['host', 'ssh']
+                if domain in LOCAL_NETWORK_DOMAINS:
+                    services.append('nfs')
+                cmd = ['aegis', 'host', 'add', '--services', ','.join(services)]
                 if domain:
                     cmd.extend(['--domain', domain])
                 cmd.append(hostname)
@@ -411,7 +421,96 @@ class SecretsSync:
         # Return the list of missing keys so we can warn before build
         self.hosts_without_keys = missing_keys
         print()
-    
+
+    def add_service_to_host_toml(self, hostname: str, service: str) -> bool:
+        """Add a Kerberos service to an already-onboarded host's declared
+        services, by editing src/hosts/<host>.toml directly.
+
+        There's no 'aegis host' subcommand for this today -- 'aegis host add'
+        only covers a brand-new host, and set-key/set-status/set-placement
+        don't touch 'services'. So this does the minimal, format-preserving
+        edit: insert one quoted string into the existing 'services' array,
+        leaving everything else in the file untouched.
+
+        Declaring the service here is the whole fix. It doesn't create the
+        principal itself: 'aegis build' does that as part of extracting each
+        host's keytab (cli.py's build-keytabs step adds any service present
+        in 'services' but not yet in the realm, the same way 'host' and
+        'ssh' already land there) -- which is also what ties the resulting
+        principal to this host, rather than leaving it a standalone
+        principal nothing carries.
+
+        Returns True if the file was changed, False if the service was
+        already declared.
+        """
+        host_toml = Path(self.aegis_system) / "src" / "hosts" / f"{hostname}.toml"
+        if not host_toml.exists():
+            warn(f"  ⚠ {hostname}: no {host_toml}, skipping")
+            return False
+
+        text = host_toml.read_text()
+        match = re.search(r"services\s*=\s*\[(.*?)\]", text, re.DOTALL)
+        if not match:
+            warn(f"  ⚠ {hostname}: no 'services' array found in {host_toml}, skipping")
+            return False
+
+        if service in re.findall(r'"([^"]+)"', match.group(1)):
+            return False
+
+        # Match the existing entries' own indentation, so the inserted line
+        # reads like the rest of the array rather than a machine patch. Falls
+        # back to a plain comma-separated insertion for a single-line array,
+        # which nothing in this repo currently uses but which 'services =
+        # ["host", "ssh"]' would otherwise silently corrupt.
+        indent_match = re.search(r'\n(\s*)"', match.group(1))
+        if indent_match:
+            addition = f'{indent_match.group(1)}"{service}",\n'
+            insert_at = match.end(1)
+        else:
+            addition = f', "{service}"'
+            insert_at = match.end(1)
+
+        host_toml.write_text(text[:insert_at] + addition + text[insert_at:])
+        return True
+
+    def ensure_local_nfs_principals(self) -> None:
+        """Make sure every already-onboarded sea/burg host declares 'nfs'.
+
+        NFS is universal on the local networks, so every host there should
+        carry an nfs/<fqdn> principal. Nothing has ever added 'nfs' to a
+        host's services list before this -- checked against all 48 existing
+        host tomls, including the ~30 sea hosts whose realm.toml already
+        carries an nfs/<fqdn> principal left over from importing the old
+        /secrets realm dump: none of them declare the service, so none of
+        them actually get it in their keytab. Declaring it here is what lets
+        the next 'aegis build' create (where missing) and extract it.
+
+        Scoped to hosts already known to aegis and to LOCAL_NETWORK_DOMAINS,
+        the same domain field 'init_hosts' reads -- so a host not tracked in
+        fudo-entities (an older, hand-added host) is left alone, same as the
+        rest of this script only acting on what entities declares.
+        """
+        info("Ensuring 'nfs' service on sea/burg hosts...")
+        existing_hosts = self.get_aegis_hosts()
+        hosts_data = self.entities.get('hosts', {})
+
+        changed = []
+        for hostname, host_info in sorted(hosts_data.items()):
+            if host_info.get('domain') not in LOCAL_NETWORK_DOMAINS:
+                continue
+            if hostname not in existing_hosts:
+                continue
+            if self.add_service_to_host_toml(hostname, "nfs"):
+                info(f"  → Added 'nfs' to {hostname}")
+                changed.append(hostname)
+
+        if changed:
+            success(f"  ✓ Added 'nfs' service to {len(changed)} host(s): "
+                    f"{' '.join(changed)}")
+        else:
+            success("  ✓ All sea/burg hosts already declare 'nfs'")
+        print()
+
     def get_nexus_key_format(self, hostname: str) -> Optional[str]:
         """Format of a host's [nexus-key] manifest entry: "hmac", "ed25519",
         or None if the host has no Nexus key at all yet."""
@@ -629,6 +728,7 @@ class SecretsSync:
         self.add_hosts_to_roles("domain", "domain", "domain-")
         self.add_hosts_to_roles("site", "site", "site-")
         self.add_hosts_to_nebula()
+        self.ensure_local_nfs_principals()
 
         # Build all secrets. This also writes a role key for every member that
         # does not have one yet, and reconciles role secrets into the manifests
