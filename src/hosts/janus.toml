@@ -1,6 +1,7 @@
 services = [
     "host",
     "ssh",
+    "nfs",
 ]
 filesystem_keys = []
 age_pubkey = "age1wqhmlexpkacwhuhq5vrnxf6crpksuuz7myue887az8la7acdtcxs5panfc"

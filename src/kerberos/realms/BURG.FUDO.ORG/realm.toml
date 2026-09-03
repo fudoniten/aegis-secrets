@@ -93,6 +93,50 @@ kind = "infrastructure"
 [principals."krbtgt/BURG.FUDO.ORG@BURG.FUDO.ORG"]
 kind = "infrastructure"
 
+[principals."nfs/cogito-0.burg.fudo.org"]
+kind = "service"
+host = "cogito-0"
+
+[principals."nfs/forge.burg.fudo.org"]
+kind = "service"
+host = "forge"
+
+[principals."nfs/jazz.burg.fudo.org"]
+kind = "service"
+host = "jazz"
+
+[principals."nfs/legio-0.burg.fudo.org"]
+kind = "service"
+host = "legio-0"
+
+[principals."nfs/legio-1.burg.fudo.org"]
+kind = "service"
+host = "legio-1"
+
+[principals."nfs/limina.burg.fudo.org"]
+kind = "service"
+host = "limina"
+
+[principals."nfs/magis-0.burg.fudo.org"]
+kind = "service"
+host = "magis-0"
+
+[principals."nfs/magis-1.burg.fudo.org"]
+kind = "service"
+host = "magis-1"
+
+[principals."nfs/nomenclator-0.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-0"
+
+[principals."nfs/system7.burg.fudo.org"]
+kind = "service"
+host = "system7"
+
+[principals."nfs/telly.burg.fudo.org"]
+kind = "service"
+host = "telly"
+
 [principals."ssh/cogito-0.burg.fudo.org"]
 kind = "service"
 host = "cogito-0"

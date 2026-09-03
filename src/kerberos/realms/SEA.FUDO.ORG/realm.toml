@@ -185,17 +185,29 @@ kind = "service"
 [principals."nfs/grendal.sea.fudo.org"]
 kind = "service"
 
+[principals."nfs/janus.sea.fudo.org"]
+kind = "service"
+host = "janus"
+
 [principals."nfs/jazz.sea.fudo.org"]
 kind = "service"
 
 [principals."nfs/lambda.sea.fudo.org"]
 kind = "service"
 
+[principals."nfs/larder.sea.fudo.org"]
+kind = "service"
+host = "larder"
+
 [principals."nfs/limina.sea.fudo.org"]
 kind = "service"
 
 [principals."nfs/nostromo.sea.fudo.org"]
 kind = "service"
+
+[principals."nfs/pantry.sea.fudo.org"]
+kind = "service"
+host = "pantry"
 
 [principals."nfs/plato.sea.fudo.org"]
 kind = "service"

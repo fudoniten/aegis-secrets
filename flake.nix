@@ -2,7 +2,7 @@
   description = "Aegis Secrets - Encrypted secrets for infrastructure";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
 
     # Admin tools for managing secrets
