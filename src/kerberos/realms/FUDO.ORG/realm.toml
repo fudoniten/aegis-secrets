@@ -7,7 +7,7 @@ max_renewable_lifetime = "1m"
 domains = [
     "fudo.org",
 ]
-kdc_role = "kdc"
+kdc_role = "fudo-kdc"
 trusts = [
     "SEA.FUDO.ORG",
 ]
