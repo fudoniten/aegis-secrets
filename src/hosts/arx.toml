@@ -6,3 +6,12 @@ filesystem_keys = []
 age_pubkey = "age177rfht6vclcmzhp9pep90f9dyyfkjp8r805hyml99uq095hg35wqvvcgfl"
 
 [extra_secrets]
+
+[placement."secret:dawarich-postgres.env"]
+target = "/run/dawarich/postgres.env"
+
+[placement."secret:dawarich.env"]
+target = "/run/dawarich/env"
+
+[placement."secret:mastodon-oidc.env"]
+target = "/run/mastodon/oidc.env"

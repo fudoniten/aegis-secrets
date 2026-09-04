@@ -6,3 +6,15 @@ filesystem_keys = []
 age_pubkey = "age1k0p40vxnrvcvyg6s5mtggxcdykwmcuufh0efpmw9x2mwvdvwzprsrem6zz"
 
 [extra_secrets]
+
+[placement."secret:ldap-bind.passwd"]
+target = "/run/ldap/bind.passwd"
+
+[placement."secret:mastodon-oidc.env"]
+target = "/run/mastodon/oidc.env"
+
+[placement."secret:paris-bind.token"]
+target = "/run/paris/bind.token"
+
+[placement."secret:paris-outpost.token"]
+target = "/run/paris/outpost.token"
