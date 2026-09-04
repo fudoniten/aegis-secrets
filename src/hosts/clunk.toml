@@ -3,7 +3,7 @@ services = [
     "ssh",
 ]
 filesystem_keys = []
-status = "pending"
+status = "retired"
 note = "rus.selby.ca realm never fleshed out"
 
 [extra_secrets]

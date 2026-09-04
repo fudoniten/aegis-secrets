@@ -4,6 +4,7 @@ services = [
     "nfs",
 ]
 filesystem_keys = []
+status = "retired"
 age_pubkey = "age13u4jp80vkjuxex07kjfhffk2jp499s5ytwgp8r90gh4n22nejchsk0qm5x"
 
 [extra_secrets]

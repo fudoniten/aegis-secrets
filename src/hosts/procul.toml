@@ -3,6 +3,7 @@ services = [
     "ssh",
 ]
 filesystem_keys = []
+status = "retired"
 age_pubkey = "age17w9m0ndl5and7c2rtcvhlutqdfxkgergd06j8e5lvhpjzms4vu0s9gg3kg"
 
 [extra_secrets]
