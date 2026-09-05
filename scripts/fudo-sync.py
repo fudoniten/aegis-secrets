@@ -11,7 +11,8 @@ This script initializes all hosts, roles, and builds secrets by:
 6. Adding hosts to their respective roles
 7. Ensuring sea/burg hosts declare an 'nfs' Kerberos service
 8. Generating and importing wallfly presence passwords
-9. Building all secrets
+9. Generating and importing domain MQTT service passwords
+10. Building all secrets
 
 Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
 file the dev shell generates; run this from 'nix develop', not directly.
@@ -35,10 +36,37 @@ from typing import Dict, List, Optional, Set
 #: here and has to be kept in sync by hand.
 WALLFLY_SITES = {"seattle"}
 
-#: Each wallfly site's MQTT broker host, i.e. its
-#: config.fudo.services.mqtt.host (domain/sea.fudo.org/config.nix). Also not
-#: entity data.
-WALLFLY_MQTT_BROKERS = {"seattle": "wormhole0"}
+#: Each site's MQTT broker host, i.e. its config.fudo.services.mqtt.host
+#: (domain/<domain>/config.nix). Also not entity data. Shared by wallfly's
+#: broker-side secrets and MQTT_SERVICES below -- every broker-side MQTT
+#: secret for a site goes to the same host, via the same role
+#: (see MQTT_BROKER_ROLE / _ensure_role).
+MQTT_BROKER_HOSTS = {"seattle": "wormhole0"}
+
+#: Domain-level services whose MQTT broker-side password this script
+#: manages, keyed by site. Client-side secrets, where a service needs one
+#: at all, are listed separately below (MQTT_CLIENT_SECRETS) -- most of
+#: these either have no client-side reference to migrate (their own MQTT
+#: credential is configured out of band) or read it as a raw string baked
+#: into the Nix store at eval time, which isn't migratable without an
+#: upstream module change.
+MQTT_SERVICES = {
+    "seattle": [
+        "frigate", "home-assistant", "node-red", "teslamate", "zigbee2mqtt"
+    ],
+}
+
+#: Per-service client-side secret, for the few MQTT services whose own
+#: config reads the password from a file at runtime (nixos-config
+#: password-file) rather than out of band or as a baked-in string. Keyed
+#: by service name; value is (host, unix user, target path).
+MQTT_CLIENT_SECRETS = {
+    "frigate": ("zbox", "frigate", "/run/mqtt-client/frigate.passwd"),
+}
+
+
+def mqtt_broker_role(site: str) -> str:
+    return f"mqtt-broker-{site}"
 
 #: Domains whose hosts sit on a local network and so are expected to use NFS.
 #: 'sea.fudo.org' uses it today; 'burg.fudo.org' doesn't yet, but there's no
@@ -533,6 +561,78 @@ class SecretsSync:
         return (Path(self.aegis_system) / "deploy" / "hosts" / host
                 / "secrets" / f"{name}.age").exists()
 
+    def _ensure_role(self, role: str, members: List[str],
+                      existing_roles: Set[str]) -> bool:
+        """Create `role` if missing and add any of `members` not already in
+        it. Mutates `existing_roles` in place, so callers checking several
+        roles in a loop don't re-hit the filesystem for each one.
+
+        Returns whether the role is usable (existed already, or was just
+        created) -- False only if 'aegis role init' itself failed.
+        """
+        if role not in existing_roles:
+            info(f"  → Initializing role: {role}")
+            try:
+                run_command(['aegis', 'role', 'init', role])
+                existing_roles.add(role)
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to initialize role: {role}")
+                return False
+
+        current_members = self.get_role_members(role)
+        for hostname in members:
+            if hostname in current_members:
+                continue
+            info(f"  → Adding {hostname} to {role}")
+            try:
+                run_command(['aegis', 'role', 'add-host', role, hostname])
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to add {hostname} to {role}")
+        return True
+
+    def _import_paired_secret(self, description: str, client_args: List[str],
+                               broker_args: Optional[List[str]]) -> str:
+        """Generate one password and import it under a client-side
+        name/placement and, if `broker_args` is given, a broker-side one
+        too, both carrying the same value. Returns 'generated' or 'failed'.
+
+        client_args/broker_args are the recipient + placement flags for
+        'aegis secret import <name> ...' -- everything after the name and
+        before '--file'. Pass broker_args=None for a client-only import
+        (e.g. wallfly when the site's broker isn't onboarded yet) --
+        there's nothing to keep in sync in that case, so it's a plain
+        single import rather than a pairing with nothing to pair against.
+        """
+        password = secrets.token_urlsafe(32)
+        fd, tmp_path = tempfile.mkstemp()
+        try:
+            os.chmod(tmp_path, 0o600)
+            with os.fdopen(fd, 'w') as f:
+                f.write(password)
+
+            info(f"  → Generating {description}")
+            try:
+                run_command(['aegis', 'secret', 'import', *client_args,
+                             '--file', tmp_path])
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to import client-side {description}")
+                return 'failed'
+
+            if broker_args is None:
+                return 'generated'
+
+            try:
+                run_command(['aegis', 'secret', 'import', *broker_args,
+                             '--file', tmp_path])
+            except subprocess.CalledProcessError:
+                error(f"  ✗ Failed to import broker-side {description} -- "
+                      f"the client-side copy is now live with no matching "
+                      f"broker copy")
+                return 'failed'
+            return 'generated'
+        finally:
+            os.unlink(tmp_path)
+
     def ensure_wallfly_secrets(self) -> None:
         """Generate and import wallfly passwords for each WALLFLY_SITES site.
 
@@ -540,11 +640,13 @@ class SecretsSync:
         on two different hosts by two different owners:
         wallfly-<user>-passwd (client side, read by wallfly itself as
         <user>) and mqtt-wallfly-<user>-passwd (broker side, read by
-        mosquitto). They're generated and imported together so the two
-        copies can never independently drift -- this script has no way to
-        read a secret back out once encrypted, so if only one side existed
-        already there would be no correct value to give the other, only a
-        guess. That case is left alone with a warning rather than guessed at.
+        mosquitto, via the shared mqtt-broker-<site> role -- see
+        _ensure_role and mqtt_broker_role). They're generated and imported
+        together so the two copies can never independently drift -- this
+        script has no way to read a secret back out once encrypted, so if
+        only one side existed already there would be no correct value to
+        give the other, only a guess. That case is left alone with a
+        warning rather than guessed at.
 
         The client copy goes to a role scoped to the site's NON-hardened
         hosts, deliberately narrower than the pre-existing 'site-<site>'
@@ -572,9 +674,9 @@ class SecretsSync:
         mismatched = []
 
         for site in sorted(WALLFLY_SITES):
-            broker_host = WALLFLY_MQTT_BROKERS.get(site)
+            broker_host = MQTT_BROKER_HOSTS.get(site)
             if broker_host is None:
-                warn(f"  ⚠ {site}: no WALLFLY_MQTT_BROKERS entry, skipping")
+                warn(f"  ⚠ {site}: no MQTT_BROKER_HOSTS entry, skipping")
                 continue
 
             site_hosts = {name: info for name, info in hosts_data.items()
@@ -588,24 +690,18 @@ class SecretsSync:
                 continue
 
             role = f"wallfly-{site}"
-            if role not in existing_roles:
-                info(f"  → Initializing role: {role}")
-                try:
-                    run_command(['aegis', 'role', 'init', role])
-                    existing_roles.add(role)
-                except subprocess.CalledProcessError:
-                    error(f"  ✗ Failed to initialize role: {role}, skipping {site}")
-                    continue
+            if not self._ensure_role(role, non_hardened, existing_roles):
+                warn(f"  ⚠ {site}: skipping, role {role} unavailable")
+                continue
 
-            members = self.get_role_members(role)
-            for hostname in non_hardened:
-                if hostname in members:
-                    continue
-                info(f"  → Adding {hostname} to {role}")
-                try:
-                    run_command(['aegis', 'role', 'add-host', role, hostname])
-                except subprocess.CalledProcessError:
-                    error(f"  ✗ Failed to add {hostname} to {role}")
+            broker_ready = broker_host in existing_hosts
+            broker_role = mqtt_broker_role(site)
+            if broker_ready:
+                broker_ready = self._ensure_role(
+                    broker_role, [broker_host], existing_roles)
+            if not broker_ready:
+                warn(f"  ⚠ {site}: broker host {broker_host} not ready, "
+                     f"skipping broker-side secrets")
 
             # Mirrors services/wallfly-presence.nix's
             # `site-users ++ domain-users`: every domain any host at this
@@ -620,18 +716,13 @@ class SecretsSync:
                     domains_data.get(domain, {}).get('local-users', []))
             wallfly_users = sorted(site_users | domain_users)
 
-            broker_ready = broker_host in existing_hosts
-            if not broker_ready:
-                warn(f"  ⚠ {site}: broker host {broker_host} not yet in "
-                     f"aegis, skipping broker-side secrets")
-
             for username in wallfly_users:
                 client_name = f"wallfly-{username}-passwd"
                 broker_name = f"mqtt-wallfly-{username}-passwd"
 
                 client_done = self._role_secret_exists(role, client_name)
-                broker_done = (not broker_ready) or self._host_secret_exists(
-                    broker_host, broker_name)
+                broker_done = (not broker_ready) or self._role_secret_exists(
+                    broker_role, broker_name)
 
                 if client_done and broker_done:
                     already_done += 1
@@ -641,48 +732,156 @@ class SecretsSync:
                     mismatched.append(f"{username} ({site})")
                     continue
 
-                password = secrets.token_urlsafe(32)
-                fd, tmp_path = tempfile.mkstemp()
-                try:
-                    os.chmod(tmp_path, 0o600)
-                    with os.fdopen(fd, 'w') as f:
-                        f.write(password)
-
-                    info(f"  → Generating wallfly secrets for {username} "
-                         f"({site})")
-                    try:
-                        run_command([
-                            'aegis', 'secret', 'import', client_name,
-                            '--role', role, '--file', tmp_path,
-                            '--target', f'/run/wallfly-{username}/passwd',
-                            '--user', username, '--mode', '0400'
-                        ])
-                        generated += 1
-                    except subprocess.CalledProcessError:
-                        error(f"  ✗ Failed to import {client_name}")
-                        continue
-
-                    if broker_ready:
-                        try:
-                            run_command([
-                                'aegis', 'secret', 'import', broker_name,
-                                '--host', broker_host, '--file', tmp_path,
-                                '--target',
-                                f'/run/mqtt/private-wallfly-{username}.passwd',
-                                '--user', 'mosquitto', '--group', 'mosquitto'
-                            ])
-                            generated += 1
-                        except subprocess.CalledProcessError:
-                            error(f"  ✗ Failed to import {broker_name} -- "
-                                  f"{client_name} is now live with no "
-                                  f"matching broker copy")
-                finally:
-                    os.unlink(tmp_path)
+                description = (f"wallfly secrets for {username} ({site})"
+                               if broker_ready else
+                               f"wallfly secret for {username} "
+                               f"({site}, no broker yet)")
+                result = self._import_paired_secret(
+                    description,
+                    client_args=[
+                        client_name, '--role', role,
+                        '--target', f'/run/wallfly-{username}/passwd',
+                        '--user', username, '--mode', '0400'
+                    ],
+                    broker_args=[
+                        broker_name, '--role', broker_role,
+                        '--target',
+                        f'/run/mqtt/private-wallfly-{username}.passwd',
+                        '--user', 'mosquitto', '--group', 'mosquitto'
+                    ] if broker_ready else None,
+                )
+                if result == 'generated':
+                    generated += 1
 
         if generated > 0:
             success(f"  ✓ Generated {generated} wallfly secret(s)")
         if already_done > 0:
             success(f"  ✓ {already_done} wallfly user(s) already fully "
+                    f"provisioned")
+        if mismatched:
+            warn(f"  ⚠ Client/broker secret exists on only one side for: "
+                 f"{', '.join(mismatched)}. Not guessing a value for the "
+                 f"missing half -- resolve by hand (rotate both together "
+                 f"with 'aegis secret import ... --force').")
+        if generated == 0 and already_done == 0 and not mismatched:
+            success("  ✓ Nothing to do")
+        print()
+
+    def ensure_mqtt_service_secrets(self) -> None:
+        """Generate and import MQTT broker (and, for the few that need one,
+        client) passwords for the domain-level services in MQTT_SERVICES.
+
+        Every broker-side secret for a site's services goes through the
+        same mqtt-broker-<site> role wallfly's broker secrets use --
+        'Prefer --role for anything that belongs to a *service* rather
+        than to a machine' (aegis's own 'secret import --help') applies
+        just as well to the broker host itself: if wormhole0 is ever
+        replaced, that's a role membership change, not five (or more)
+        re-imports.
+
+        Most of these services have no client-side secret to generate at
+        all: MQTT_CLIENT_SECRETS lists the ones that do (today, only
+        frigate -- see nixos-config's domain/sea.fudo.org/config.nix for
+        why the others are either out-of-band or blocked on an upstream
+        eval-time-string issue). A service not listed there gets its
+        broker-side secret alone, no pairing, no mismatch tracking.
+        """
+        info("Ensuring MQTT service secrets...")
+
+        existing_hosts = self.get_aegis_hosts()
+        existing_roles = self.get_aegis_roles()
+
+        generated = 0
+        already_done = 0
+        mismatched = []
+
+        for site, services in sorted(MQTT_SERVICES.items()):
+            broker_host = MQTT_BROKER_HOSTS.get(site)
+            if broker_host is None:
+                warn(f"  ⚠ {site}: no MQTT_BROKER_HOSTS entry, skipping")
+                continue
+            if broker_host not in existing_hosts:
+                warn(f"  ⚠ {site}: broker host {broker_host} not yet in "
+                     f"aegis, skipping")
+                continue
+
+            broker_role = mqtt_broker_role(site)
+            if not self._ensure_role(broker_role, [broker_host],
+                                      existing_roles):
+                warn(f"  ⚠ {site}: skipping, role {broker_role} unavailable")
+                continue
+
+            for service in services:
+                broker_name = f"mqtt-{service}-passwd"
+                broker_done = self._role_secret_exists(
+                    broker_role, broker_name)
+
+                client = MQTT_CLIENT_SECRETS.get(service)
+                if client is None:
+                    if broker_done:
+                        already_done += 1
+                        continue
+                    password = secrets.token_urlsafe(32)
+                    fd, tmp_path = tempfile.mkstemp()
+                    try:
+                        os.chmod(tmp_path, 0o600)
+                        with os.fdopen(fd, 'w') as f:
+                            f.write(password)
+                        info(f"  → Generating {broker_name} ({broker_role})")
+                        try:
+                            run_command([
+                                'aegis', 'secret', 'import', broker_name,
+                                '--role', broker_role, '--file', tmp_path,
+                                '--target',
+                                f'/run/mqtt/private-{service}.passwd',
+                                '--user', 'mosquitto', '--group', 'mosquitto'
+                            ])
+                            generated += 1
+                        except subprocess.CalledProcessError:
+                            error(f"  ✗ Failed to import {broker_name}")
+                    finally:
+                        os.unlink(tmp_path)
+                    continue
+
+                client_host, client_user, client_target = client
+                client_name = f"{service}-mqtt-passwd"
+
+                if client_host not in existing_hosts:
+                    warn(f"  ⚠ {service}: client host {client_host} not "
+                         f"yet in aegis, skipping")
+                    continue
+
+                client_done = self._host_secret_exists(
+                    client_host, client_name)
+
+                if client_done and broker_done:
+                    already_done += 1
+                    continue
+
+                if client_done != broker_done:
+                    mismatched.append(f"{service} ({site})")
+                    continue
+
+                result = self._import_paired_secret(
+                    f"{service} MQTT secrets ({site})",
+                    client_args=[
+                        client_name, '--host', client_host,
+                        '--target', client_target,
+                        '--user', client_user, '--mode', '0400'
+                    ],
+                    broker_args=[
+                        broker_name, '--role', broker_role,
+                        '--target', f'/run/mqtt/private-{service}.passwd',
+                        '--user', 'mosquitto', '--group', 'mosquitto'
+                    ],
+                )
+                if result == 'generated':
+                    generated += 1
+
+        if generated > 0:
+            success(f"  ✓ Generated {generated} MQTT service secret(s)")
+        if already_done > 0:
+            success(f"  ✓ {already_done} MQTT service(s) already fully "
                     f"provisioned")
         if mismatched:
             warn(f"  ⚠ Client/broker secret exists on only one side for: "
@@ -912,6 +1111,7 @@ class SecretsSync:
         self.add_hosts_to_nebula()
         self.ensure_local_nfs_principals()
         self.ensure_wallfly_secrets()
+        self.ensure_mqtt_service_secrets()
 
         # Build all secrets. This also writes a role key for every member that
         # does not have one yet, and reconciles role secrets into the manifests
