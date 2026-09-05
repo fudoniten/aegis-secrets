@@ -39,6 +39,13 @@
           text = builtins.toJSON {
             hosts = builtins.mapAttrs (name: host: {
               inherit (host) domain site;
+              # Whether this host restricts its NixOS local-users to admins
+              # (nixos-config profiles/host/hardened.nix,
+              # system/instance.nix). Consulted by fudo-sync's wallfly
+              # provisioning: a role secret naming a non-admin owner fails
+              # Aegis's ownership check on a host that never declares that
+              # user.
+              hardened = host.hardened or false;
               realm = if host ? domain && nix-entities.entities.domains
               ? ${host.domain} && nix-entities.entities.domains.${host.domain}
               ? gssapi-realm then
@@ -54,6 +61,10 @@
             domains = builtins.mapAttrs (name: domain: {
               realm =
                 if domain ? gssapi-realm then domain.gssapi-realm else null;
+              # Users local to this domain (nixos-config
+              # system/instance.nix's domain-user-list). Consulted alongside
+              # sites.<site>.local-users by fudo-sync's wallfly provisioning.
+              local-users = domain.local-users or [ ];
             }) nix-entities.entities.domains;
             # Nebula membership, resolved here rather than in the sync
             # script: the entity data and its lookup helpers are both to hand,
@@ -96,7 +107,14 @@
               }) members;
             };
 
-            sites = builtins.attrNames nix-entities.entities.sites;
+            # An attrset rather than a bare name list, so wallfly
+            # provisioning can read each site's local-users. Existing
+            # consumers (init_site_roles's `for site in sites`) iterate a
+            # dict's keys exactly as they did a list's elements, so this is
+            # not a breaking change for them.
+            sites = builtins.mapAttrs (name: site: {
+              local-users = site.local-users or [ ];
+            }) nix-entities.entities.sites;
             realms = pkgs.lib.unique (pkgs.lib.filter (r: r != null)
               (pkgs.lib.mapAttrsToList (_: domain:
                 if domain ? gssapi-realm then domain.gssapi-realm else null)
