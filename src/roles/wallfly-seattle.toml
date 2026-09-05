@@ -1,0 +1,49 @@
+hosts = [
+    "cellar",
+    "forum",
+    "grendal",
+    "larder",
+    "pantry",
+    "rama",
+    "system3",
+    "thing-0",
+    "thunk-0",
+    "toothless",
+    "wormhole0",
+    "zbox",
+]
+
+[placement."secret:wallfly-hermes-passwd"]
+target = "/run/wallfly-hermes/passwd"
+user = "hermes"
+mode = "0400"
+
+[placement."secret:wallfly-jasper-passwd"]
+target = "/run/wallfly-jasper/passwd"
+user = "jasper"
+mode = "0400"
+
+[placement."secret:wallfly-ken-passwd"]
+target = "/run/wallfly-ken/passwd"
+user = "ken"
+mode = "0400"
+
+[placement."secret:wallfly-niten-passwd"]
+target = "/run/wallfly-niten/passwd"
+user = "niten"
+mode = "0400"
+
+[placement."secret:wallfly-openclaw-passwd"]
+target = "/run/wallfly-openclaw/passwd"
+user = "openclaw"
+mode = "0400"
+
+[placement."secret:wallfly-reaper-passwd"]
+target = "/run/wallfly-reaper/passwd"
+user = "reaper"
+mode = "0400"
+
+[placement."secret:wallfly-xiaoxuan-passwd"]
+target = "/run/wallfly-xiaoxuan/passwd"
+user = "xiaoxuan"
+mode = "0400"

@@ -7,3 +7,38 @@ filesystem_keys = []
 age_pubkey = "age1d6c3gmgl6nl4fh98ddt6sp07we58hxlr3w6utjyakd6jcd64udhshmql83"
 
 [extra_secrets]
+
+[placement."secret:mqtt-wallfly-hermes-passwd"]
+target = "/run/mqtt/private-wallfly-hermes.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-jasper-passwd"]
+target = "/run/mqtt/private-wallfly-jasper.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-ken-passwd"]
+target = "/run/mqtt/private-wallfly-ken.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-niten-passwd"]
+target = "/run/mqtt/private-wallfly-niten.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-openclaw-passwd"]
+target = "/run/mqtt/private-wallfly-openclaw.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-reaper-passwd"]
+target = "/run/mqtt/private-wallfly-reaper.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-wallfly-xiaoxuan-passwd"]
+target = "/run/mqtt/private-wallfly-xiaoxuan.passwd"
+user = "mosquitto"
+group = "mosquitto"

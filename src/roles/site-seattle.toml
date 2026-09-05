@@ -13,4 +13,6 @@ hosts = [
     "janus",
     "larder",
     "pantry",
+    "system3",
+    "toothless",
 ]

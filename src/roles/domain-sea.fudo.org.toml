@@ -13,4 +13,6 @@ hosts = [
     "thunk-0",
     "wormhole0",
     "zbox",
+    "system3",
+    "toothless",
 ]
