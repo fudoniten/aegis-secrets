@@ -1,0 +1,28 @@
+hosts = [
+    "wormhole0",
+]
+
+[placement."secret:mqtt-frigate-passwd"]
+target = "/run/mqtt/private-frigate.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-home-assistant-passwd"]
+target = "/run/mqtt/private-home-assistant.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-node-red-passwd"]
+target = "/run/mqtt/private-node-red.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-teslamate-passwd"]
+target = "/run/mqtt/private-teslamate.passwd"
+user = "mosquitto"
+group = "mosquitto"
+
+[placement."secret:mqtt-zigbee2mqtt-passwd"]
+target = "/run/mqtt/private-zigbee2mqtt.passwd"
+user = "mosquitto"
+group = "mosquitto"
