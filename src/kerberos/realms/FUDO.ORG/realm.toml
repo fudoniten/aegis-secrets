@@ -197,10 +197,6 @@ peer = "SEA.FUDO.ORG"
 kind = "cross-realm"
 peer = "SEA.FUDO.ORG"
 
-[principals."krbtgt/SEA.FUDO.ORG@SEA.FUDO.ORG"]
-kind = "cross-realm"
-peer = "SEA.FUDO.ORG"
-
 [principals."ldap/legatus.fudo.org"]
 kind = "service"
 
