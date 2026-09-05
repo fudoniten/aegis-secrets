@@ -1,0 +1,14 @@
+hosts = [
+    "cellar",
+    "larder",
+    "pantry",
+    "rama",
+    "thunk-0",
+    "thing-0",
+]
+
+[placement."secret:gpu-node-tagger.ca-crt"]
+target = "/run/gpu-node-tagger/ca.crt"
+
+[placement."secret:gpu-node-tagger.token"]
+target = "/run/gpu-node-tagger/token"
