@@ -10,7 +10,8 @@ This script initializes all hosts, roles, and builds secrets by:
 5. Migrating Nexus keys to the ed25519 (/api/v3) format
 6. Adding hosts to their respective roles
 7. Ensuring sea/burg hosts declare an 'nfs' Kerberos service
-8. Building all secrets
+8. Generating and importing wallfly presence passwords
+9. Building all secrets
 
 Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
 file the dev shell generates; run this from 'nix develop', not directly.
@@ -19,12 +20,25 @@ file the dev shell generates; run this from 'nix develop', not directly.
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
+
+#: Sites where fudo.services.wallfly-presence is enabled
+#: (nixos-config site/<site>/global.nix). That's a NixOS module option, not
+#: entity data, so -- like LOCAL_NETWORK_DOMAINS below -- it's hardcoded
+#: here and has to be kept in sync by hand.
+WALLFLY_SITES = {"seattle"}
+
+#: Each wallfly site's MQTT broker host, i.e. its
+#: config.fudo.services.mqtt.host (domain/sea.fudo.org/config.nix). Also not
+#: entity data.
+WALLFLY_MQTT_BROKERS = {"seattle": "wormhole0"}
 
 #: Domains whose hosts sit on a local network and so are expected to use NFS.
 #: 'sea.fudo.org' uses it today; 'burg.fudo.org' doesn't yet, but there's no
@@ -511,6 +525,174 @@ class SecretsSync:
             success("  ✓ All sea/burg hosts already declare 'nfs'")
         print()
 
+    def _role_secret_exists(self, role: str, name: str) -> bool:
+        return (Path(self.aegis_system) / "deploy" / "roles" / role
+                / "secrets" / f"{name}.age").exists()
+
+    def _host_secret_exists(self, host: str, name: str) -> bool:
+        return (Path(self.aegis_system) / "deploy" / "hosts" / host
+                / "secrets" / f"{name}.age").exists()
+
+    def ensure_wallfly_secrets(self) -> None:
+        """Generate and import wallfly passwords for each WALLFLY_SITES site.
+
+        Each user needs two copies of the SAME password, since it's checked
+        on two different hosts by two different owners:
+        wallfly-<user>-passwd (client side, read by wallfly itself as
+        <user>) and mqtt-wallfly-<user>-passwd (broker side, read by
+        mosquitto). They're generated and imported together so the two
+        copies can never independently drift -- this script has no way to
+        read a secret back out once encrypted, so if only one side existed
+        already there would be no correct value to give the other, only a
+        guess. That case is left alone with a warning rather than guessed at.
+
+        The client copy goes to a role scoped to the site's NON-hardened
+        hosts, deliberately narrower than the pre-existing 'site-<site>'
+        role: a hardened host restricts its NixOS local-users to admins
+        (nixos-config system/instance.nix), so a role secret naming a
+        non-admin owner would fail Aegis's ownership assertion the moment
+        that host leaves dry-run -- even though nixos-config's
+        services/wallfly-presence.nix would never have looked for the
+        secret there in the first place. Hardened hosts keep reading the
+        legacy build-seed-derived password for now; giving them Aegis
+        coverage too is future work, not a blocker for everyone else.
+
+        Idempotent: a user with both secrets already in place is skipped.
+        """
+        info("Ensuring wallfly secrets...")
+
+        hosts_data = self.entities.get('hosts', {})
+        domains_data = self.entities.get('domains', {})
+        sites_data = self.entities.get('sites', {})
+        existing_hosts = self.get_aegis_hosts()
+        existing_roles = self.get_aegis_roles()
+
+        generated = 0
+        already_done = 0
+        mismatched = []
+
+        for site in sorted(WALLFLY_SITES):
+            broker_host = WALLFLY_MQTT_BROKERS.get(site)
+            if broker_host is None:
+                warn(f"  ⚠ {site}: no WALLFLY_MQTT_BROKERS entry, skipping")
+                continue
+
+            site_hosts = {name: info for name, info in hosts_data.items()
+                          if info.get('site') == site}
+            non_hardened = sorted(
+                name for name, info in site_hosts.items()
+                if not info.get('hardened', False) and name in existing_hosts)
+
+            if not non_hardened:
+                warn(f"  ⚠ {site}: no onboarded non-hardened hosts, skipping")
+                continue
+
+            role = f"wallfly-{site}"
+            if role not in existing_roles:
+                info(f"  → Initializing role: {role}")
+                try:
+                    run_command(['aegis', 'role', 'init', role])
+                    existing_roles.add(role)
+                except subprocess.CalledProcessError:
+                    error(f"  ✗ Failed to initialize role: {role}, skipping {site}")
+                    continue
+
+            members = self.get_role_members(role)
+            for hostname in non_hardened:
+                if hostname in members:
+                    continue
+                info(f"  → Adding {hostname} to {role}")
+                try:
+                    run_command(['aegis', 'role', 'add-host', role, hostname])
+                except subprocess.CalledProcessError:
+                    error(f"  ✗ Failed to add {hostname} to {role}")
+
+            # Mirrors services/wallfly-presence.nix's
+            # `site-users ++ domain-users`: every domain any host at this
+            # site belongs to contributes its local-users, alongside the
+            # site's own.
+            site_users = set(sites_data.get(site, {}).get('local-users', []))
+            site_domains = {info['domain'] for info in site_hosts.values()
+                             if info.get('domain')}
+            domain_users: Set[str] = set()
+            for domain in site_domains:
+                domain_users.update(
+                    domains_data.get(domain, {}).get('local-users', []))
+            wallfly_users = sorted(site_users | domain_users)
+
+            broker_ready = broker_host in existing_hosts
+            if not broker_ready:
+                warn(f"  ⚠ {site}: broker host {broker_host} not yet in "
+                     f"aegis, skipping broker-side secrets")
+
+            for username in wallfly_users:
+                client_name = f"wallfly-{username}-passwd"
+                broker_name = f"mqtt-wallfly-{username}-passwd"
+
+                client_done = self._role_secret_exists(role, client_name)
+                broker_done = (not broker_ready) or self._host_secret_exists(
+                    broker_host, broker_name)
+
+                if client_done and broker_done:
+                    already_done += 1
+                    continue
+
+                if client_done != broker_done:
+                    mismatched.append(f"{username} ({site})")
+                    continue
+
+                password = secrets.token_urlsafe(32)
+                fd, tmp_path = tempfile.mkstemp()
+                try:
+                    os.chmod(tmp_path, 0o600)
+                    with os.fdopen(fd, 'w') as f:
+                        f.write(password)
+
+                    info(f"  → Generating wallfly secrets for {username} "
+                         f"({site})")
+                    try:
+                        run_command([
+                            'aegis', 'secret', 'import', client_name,
+                            '--role', role, '--file', tmp_path,
+                            '--target', f'/run/wallfly-{username}/passwd',
+                            '--user', username, '--mode', '0400'
+                        ])
+                        generated += 1
+                    except subprocess.CalledProcessError:
+                        error(f"  ✗ Failed to import {client_name}")
+                        continue
+
+                    if broker_ready:
+                        try:
+                            run_command([
+                                'aegis', 'secret', 'import', broker_name,
+                                '--host', broker_host, '--file', tmp_path,
+                                '--target',
+                                f'/run/mqtt/private-wallfly-{username}.passwd',
+                                '--user', 'mosquitto', '--group', 'mosquitto'
+                            ])
+                            generated += 1
+                        except subprocess.CalledProcessError:
+                            error(f"  ✗ Failed to import {broker_name} -- "
+                                  f"{client_name} is now live with no "
+                                  f"matching broker copy")
+                finally:
+                    os.unlink(tmp_path)
+
+        if generated > 0:
+            success(f"  ✓ Generated {generated} wallfly secret(s)")
+        if already_done > 0:
+            success(f"  ✓ {already_done} wallfly user(s) already fully "
+                    f"provisioned")
+        if mismatched:
+            warn(f"  ⚠ Client/broker secret exists on only one side for: "
+                 f"{', '.join(mismatched)}. Not guessing a value for the "
+                 f"missing half -- resolve by hand (rotate both together "
+                 f"with 'aegis secret import ... --force').")
+        if generated == 0 and already_done == 0 and not mismatched:
+            success("  ✓ Nothing to do")
+        print()
+
     def get_nexus_key_format(self, hostname: str) -> Optional[str]:
         """Format of a host's [nexus-key] manifest entry: "hmac", "ed25519",
         or None if the host has no Nexus key at all yet."""
@@ -600,7 +782,7 @@ class SecretsSync:
         """Initialize site roles."""
         info("Checking site roles...")
         existing_roles = self.get_aegis_roles()
-        sites = self.entities.get('sites', [])
+        sites = self.entities.get('sites', {})
         new_roles = [f"site-{site}" for site in sites if f"site-{site}" not in existing_roles]
         
         if new_roles:
@@ -729,6 +911,7 @@ class SecretsSync:
         self.add_hosts_to_roles("site", "site", "site-")
         self.add_hosts_to_nebula()
         self.ensure_local_nfs_principals()
+        self.ensure_wallfly_secrets()
 
         # Build all secrets. This also writes a role key for every member that
         # does not have one yet, and reconciles role secrets into the manifests
