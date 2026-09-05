@@ -6,3 +6,19 @@ filesystem_keys = []
 age_pubkey = "age1ngrcqwq2k0g6uva4qkgq394qc6avjek5l7ww4snqatsj78hdxchq7anax5"
 
 [extra_secrets]
+
+[placement."secret:nexus-dns-db-passwd"]
+target = "/run/nexus/dns-server-db.passwd"
+
+[placement."secret:nexus-dns-db-passwd-postgres"]
+target = "/run/nexus-postgres/dns-server-db.passwd"
+user = "postgres"
+group = "postgres"
+
+[placement."secret:nexus-server-db-passwd"]
+target = "/run/nexus/server-db.passwd"
+
+[placement."secret:nexus-server-db-passwd-postgres"]
+target = "/run/nexus-postgres/server-db.passwd"
+user = "postgres"
+group = "postgres"
