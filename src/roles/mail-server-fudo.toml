@@ -1,0 +1,6 @@
+hosts = [
+    "germany",
+]
+
+[placement."secret:mail-outpost.token"]
+target = "/run/mail-server/outpost.token"
