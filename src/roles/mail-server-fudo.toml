@@ -5,6 +5,9 @@ hosts = [
 [placement."secret:dovecot-admin-password-file"]
 target = "/run/mail-server/dovecot-admin.passwd"
 
+[placement."secret:dovecot-admin.passwd"]
+target = "/run/mail-server/dovecot-admin.passwd"
+
 [placement."secret:internal-secrets.dovecot-admin-password-file"]
 target = "/run/mail-server/dovecot-admin.passwd"
 
@@ -16,6 +19,9 @@ target = "/run/mail-server/ldap-bind.passwd"
 
 [placement."secret:mail-outpost.token"]
 target = "/run/mail-server/outpost.token"
+
+[placement."secret:mail-redis.passwd"]
+target = "/run/mail-server/redis.passwd"
 
 [placement."secret:redis-password-file"]
 target = "/run/mail-server/redis.passwd"
