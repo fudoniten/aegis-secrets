@@ -1,0 +1,6 @@
+hosts = [
+    "legatus",
+]
+
+[placement."secret:authentik-smtp.passwd"]
+target = "/run/authentik/smtp.passwd"
