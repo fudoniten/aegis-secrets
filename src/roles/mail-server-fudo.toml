@@ -2,5 +2,20 @@ hosts = [
     "germany",
 ]
 
+[placement."secret:dovecot-admin-password-file"]
+target = "/run/mail-server/dovecot-admin.passwd"
+
+[placement."secret:internal-secrets.dovecot-admin-password-file"]
+target = "/run/mail-server/dovecot-admin.passwd"
+
+[placement."secret:internal-secrets.redis-password-file"]
+target = "/run/mail-server/redis.passwd"
+
+[placement."secret:ldap-bind.passwd"]
+target = "/run/mail-server/ldap-bind.passwd"
+
 [placement."secret:mail-outpost.token"]
 target = "/run/mail-server/outpost.token"
+
+[placement."secret:redis-password-file"]
+target = "/run/mail-server/redis.passwd"
