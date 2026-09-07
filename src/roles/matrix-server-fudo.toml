@@ -4,6 +4,7 @@ hosts = [
 
 [placement."secret:matrix-jwt.pem"]
 target = "/run/matrix/jwt.pem"
+user = "matrix-synapse"
 
 [placement."secret:matrix-oidc.secret"]
 target = "/run/matrix/oidc-client.secret"
