@@ -1,0 +1,9 @@
+hosts = [
+    "germany",
+]
+
+[placement."secret:matrix-jwt.pem"]
+target = "/run/matrix/jwt.pem"
+
+[placement."secret:matrix-oidc.secret"]
+target = "/run/matrix/oidc-client.secret"
