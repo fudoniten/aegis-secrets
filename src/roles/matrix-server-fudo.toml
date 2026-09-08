@@ -8,3 +8,4 @@ user = "matrix-synapse"
 
 [placement."secret:matrix-oidc.secret"]
 target = "/run/matrix/oidc-client.secret"
+user = "matrix-synapse"
