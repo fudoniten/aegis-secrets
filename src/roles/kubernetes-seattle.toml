@@ -12,3 +12,6 @@ target = "/run/gpu-node-tagger/ca.crt"
 
 [placement."secret:gpu-node-tagger.token"]
 target = "/run/gpu-node-tagger/token"
+
+[placement."secret:k3s.token"]
+target = "/run/k3s-secrets/k3s.token"
