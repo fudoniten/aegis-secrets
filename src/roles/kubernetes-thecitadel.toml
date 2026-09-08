@@ -5,6 +5,9 @@ hosts = [
     "magis-1",
 ]
 
+[placement."secret:k3s.token"]
+target = "/run/k3s-secrets/k3s.token"
+
 [placement."secret:nvidia-tagger.token"]
 target = "/run/kubernetes-secrets/nvidia-tagger.token"
 user = "root"

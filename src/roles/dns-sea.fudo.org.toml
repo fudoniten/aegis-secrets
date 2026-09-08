@@ -1,0 +1,6 @@
+hosts = [
+    "forum",
+]
+
+[placement."secret:adguard-admin.passwd"]
+target = "/run/adguard-dns-proxy/adguard-admin.passwd"
