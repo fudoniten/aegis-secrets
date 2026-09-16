@@ -29,6 +29,10 @@ kind = "infrastructure"
 kind = "service"
 host = "cogito-0"
 
+[principals."host/cogito-1.burg.fudo.org"]
+kind = "service"
+host = "cogito-1"
+
 [principals."host/forge.burg.fudo.org"]
 kind = "service"
 host = "forge"
@@ -101,6 +105,10 @@ kind = "infrastructure"
 kind = "service"
 host = "cogito-0"
 
+[principals."nfs/cogito-1.burg.fudo.org"]
+kind = "service"
+host = "cogito-1"
+
 [principals."nfs/forge.burg.fudo.org"]
 kind = "service"
 host = "forge"
@@ -148,6 +156,10 @@ host = "telly"
 [principals."ssh/cogito-0.burg.fudo.org"]
 kind = "service"
 host = "cogito-0"
+
+[principals."ssh/cogito-1.burg.fudo.org"]
+kind = "service"
+host = "cogito-1"
 
 [principals."ssh/forge.burg.fudo.org"]
 kind = "service"

@@ -1,5 +1,6 @@
 hosts = [
     "cogito-0",
+    "cogito-1",
     "forge",
     "jazz",
     "legio-0",

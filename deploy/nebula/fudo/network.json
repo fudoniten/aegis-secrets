@@ -51,6 +51,28 @@
       "endpoints": [],
       "localKey": false
     },
+    "cogito-0": {
+      "address": "10.100.30.13",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "cogito-1": {
+      "address": "10.100.30.14",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
     "crux": {
       "address": "10.100.7.6",
       "groups": [
@@ -186,6 +208,28 @@
       ],
       "localKey": false
     },
+    "legio-0": {
+      "address": "10.100.40.16",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "legio-1": {
+      "address": "10.100.40.17",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
     "limina": {
       "address": "10.100.1.1",
       "groups": [
@@ -210,6 +254,17 @@
     },
     "nostromo": {
       "address": "10.100.10.12",
+      "groups": [
+        "site-seattle",
+        "domain-sea.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "pantry": {
+      "address": "10.100.50.29",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
