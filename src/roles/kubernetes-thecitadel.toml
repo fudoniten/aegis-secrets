@@ -5,6 +5,7 @@ hosts = [
     "magis-1",
     "magis-2",
     "cogito-0",
+    "cogito-1",
 ]
 
 [placement."secret:k3s.token"]
