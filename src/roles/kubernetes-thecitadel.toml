@@ -8,6 +8,12 @@ hosts = [
     "cogito-1",
 ]
 
+[placement."secret:gput-node-tagger.token"]
+target = "/run/gpu-node-tagger/token"
+user = "root"
+group = "root"
+mode = "0400"
+
 [placement."secret:k3s.token"]
 target = "/run/k3s-secrets/k3s.token"
 
