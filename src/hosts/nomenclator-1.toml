@@ -4,5 +4,6 @@ services = [
     "nfs",
 ]
 filesystem_keys = []
+age_pubkey = "age1dg8kp239wzzt2jzn0lfmd7k4h4q2ap6nu77y3kk75shlc0fw9adqt4aypw"
 
 [extra_secrets]

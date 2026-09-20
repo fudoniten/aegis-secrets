@@ -69,6 +69,10 @@ host = "magis-2"
 kind = "service"
 host = "nomenclator-0"
 
+[principals."host/nomenclator-1.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-1"
+
 [principals."host/rector.burg.fudo.org"]
 kind = "service"
 host = "rector"
@@ -145,6 +149,10 @@ host = "magis-2"
 kind = "service"
 host = "nomenclator-0"
 
+[principals."nfs/nomenclator-1.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-1"
+
 [principals."nfs/system7.burg.fudo.org"]
 kind = "service"
 host = "system7"
@@ -196,6 +204,10 @@ host = "magis-2"
 [principals."ssh/nomenclator-0.burg.fudo.org"]
 kind = "service"
 host = "nomenclator-0"
+
+[principals."ssh/nomenclator-1.burg.fudo.org"]
+kind = "service"
+host = "nomenclator-1"
 
 [principals."ssh/rector.burg.fudo.org"]
 kind = "service"

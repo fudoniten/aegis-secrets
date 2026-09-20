@@ -12,4 +12,5 @@ hosts = [
     "cogito-0",
     "magis-2",
     "cogito-1",
+    "nomenclator-1",
 ]
