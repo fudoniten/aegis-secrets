@@ -128,6 +128,13 @@
       "endpoints": [],
       "localKey": false
     },
+    "gear": {
+      "address": "10.100.0.3",
+      "groups": [],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": true
+    },
     "germany": {
       "address": "10.100.0.12",
       "groups": [
