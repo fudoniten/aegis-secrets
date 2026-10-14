@@ -1,5 +1,6 @@
 hosts = [
     "nomenclator-0",
+    "nomenclator-1",
 ]
 
 [placement."secret:adguard.passwd"]
