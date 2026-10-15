@@ -1,0 +1,10 @@
+hosts = [
+    "lambda",
+    "forge",
+]
+
+[placement."secret:fleet-deploy-key"]
+target = "/run/deploy/fleet-deploy-key"
+user = "deploy"
+group = "deploy"
+mode = "0400"
