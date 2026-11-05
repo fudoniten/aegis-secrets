@@ -18,3 +18,12 @@ target = "/run/paris/bind.token"
 
 [placement."secret:paris-outpost.token"]
 target = "/run/paris/outpost.token"
+
+[placement."secret:paris-ssh-ecdsa-key"]
+target = "/run/authentik/secret.key"
+
+[placement."secret:paris-ssh-ecdsa.key"]
+target = "/run/paris/openssh/host-paris-ecdsa-private.key"
+
+[placement."secret:paris-ssh-ed25519.key"]
+target = "/run/paris/openssh/host-paris-ed25519-private.key"

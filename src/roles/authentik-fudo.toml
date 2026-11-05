@@ -2,5 +2,11 @@ hosts = [
     "legatus",
 ]
 
+[placement."secret:authentik-postgres.passwd"]
+target = "/run/authentik/postgres.passwd"
+
+[placement."secret:authentik-secret.key"]
+target = "/run/authentik/secret.key"
+
 [placement."secret:authentik-smtp.passwd"]
 target = "/run/authentik/smtp.passwd"

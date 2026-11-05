@@ -150,11 +150,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1731533236,
-        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "lastModified": 1791914995,
+        "narHash": "sha256-Zf/xfQEAasnwnmEfHqW/4hjDE/s44yn2hD4RuVIZRjA=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "rev": "b7a79d3fea1e214f6d668d521cecec0c01e26544",
         "type": "github"
       },
       "original": {
@@ -189,22 +189,6 @@
         "owner": "fudoniten",
         "repo": "fudo-clojure",
         "rev": "a32e527a6db2962f29bbbe33c1c3475c13198a08",
-        "type": "github"
-      }
-    },
-    "fudo-lib": {
-      "locked": {
-        "lastModified": 1769473966,
-        "narHash": "sha256-ml1kaep80jJeRSbalRGow/oq8UObO61ERvabD8x6rRg=",
-        "owner": "fudoniten",
-        "repo": "fudo-nix-lib",
-        "rev": "50be04ca9ee24dee41adf8324e218b39406507e9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "fudoniten",
-        "ref": "25.11",
-        "repo": "fudo-nix-lib",
         "type": "github"
       }
     },
@@ -284,15 +268,14 @@
     },
     "nix-entities": {
       "inputs": {
-        "fudo-lib": "fudo-lib",
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1791055030,
-        "narHash": "sha256-Qyj7XxE2sW9l3wVQoi17lAVCs0RROT0N77LOAfykhRE=",
+        "lastModified": 1793738667,
+        "narHash": "sha256-ntyBAVnSM2n2umBqILyVwNhxfzz+AruY2Y2FieVvYIU=",
         "ref": "refs/heads/master",
-        "rev": "140d9836a8c7ebc6cef9c10521160403ca768402",
-        "revCount": 472,
+        "rev": "6c2d67190c7bbc5bb053d3708e2739cd7d175c81",
+        "revCount": 500,
         "type": "git",
         "url": "ssh://git@github.com/fudoniten/fudo-entities"
       },
@@ -402,11 +385,11 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1789885152,
-        "narHash": "sha256-mDNo95riUw8k0MA2Btzj/OuiMcfLKofqIliLYsLbrSY=",
+        "lastModified": 1793633738,
+        "narHash": "sha256-tItrb9M8eYA6WhFgmT9tpGKueri3+wRuVA952o/2xSU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "6d663c0533ff269008fb84e45930151e37c99db9",
+        "rev": "7dcdd87373d72e7a2173e4db02e20d3d7f495cfd",
         "type": "github"
       },
       "original": {
