@@ -113,10 +113,10 @@ host = "cogito-0"
 kind = "service"
 host = "cogito-1"
 
-[principals."nfs/files.burg.fudo.link"]
+[principals."nfs/files.burg.fudo.link@BURG.FUDO.ORG"]
 kind = "service"
 
-[principals."nfs/files.burg.fudo.org"]
+[principals."nfs/files.burg.fudo.org@BURG.FUDO.ORG"]
 kind = "service"
 
 [principals."nfs/forge.burg.fudo.org"]
