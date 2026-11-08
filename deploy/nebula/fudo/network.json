@@ -30,7 +30,7 @@
       "localKey": false
     },
     "cellar": {
-      "address": "10.100.20.24",
+      "address": "10.100.50.24",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
@@ -129,7 +129,7 @@
       "localKey": false
     },
     "gear": {
-      "address": "10.100.0.3",
+      "address": "10.100.7.9",
       "groups": [],
       "lighthouse": false,
       "endpoints": [],
@@ -158,7 +158,7 @@
       "localKey": false
     },
     "janus": {
-      "address": "10.100.10.2",
+      "address": "10.100.50.2",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
@@ -191,7 +191,7 @@
       "localKey": false
     },
     "larder": {
-      "address": "10.100.20.13",
+      "address": "10.100.50.28",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
@@ -253,6 +253,39 @@
       "groups": [
         "site-worldstream-1",
         "domain-informis.land",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "magis-0": {
+      "address": "10.100.20.10",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "magis-1": {
+      "address": "10.100.20.11",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "magis-2": {
+      "address": "10.100.20.12",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
         "server"
       ],
       "lighthouse": false,
@@ -326,7 +359,7 @@
       "localKey": false
     },
     "rama": {
-      "address": "10.100.20.21",
+      "address": "10.100.50.21",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
@@ -380,39 +413,6 @@
       "endpoints": [],
       "localKey": false
     },
-    "thing-0": {
-      "address": "10.100.20.10",
-      "groups": [
-        "site-seattle",
-        "domain-sea.fudo.org",
-        "server"
-      ],
-      "lighthouse": false,
-      "endpoints": [],
-      "localKey": false
-    },
-    "thing-1": {
-      "address": "10.100.20.11",
-      "groups": [
-        "site-seattle",
-        "domain-sea.fudo.org",
-        "server"
-      ],
-      "lighthouse": false,
-      "endpoints": [],
-      "localKey": false
-    },
-    "thing-2": {
-      "address": "10.100.20.12",
-      "groups": [
-        "site-seattle",
-        "domain-sea.fudo.org",
-        "server"
-      ],
-      "lighthouse": false,
-      "endpoints": [],
-      "localKey": false
-    },
     "thing-3": {
       "address": "10.100.20.22",
       "groups": [
@@ -436,7 +436,7 @@
       "localKey": false
     },
     "thunk-0": {
-      "address": "10.100.20.27",
+      "address": "10.100.50.27",
       "groups": [
         "site-seattle",
         "domain-sea.fudo.org",
