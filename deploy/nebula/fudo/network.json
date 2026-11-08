@@ -259,6 +259,28 @@
       "endpoints": [],
       "localKey": false
     },
+    "nomenclator-0": {
+      "address": "10.100.1.4",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
+    "nomenclator-1": {
+      "address": "10.100.1.5",
+      "groups": [
+        "site-thecitadel",
+        "domain-burg.fudo.org",
+        "server"
+      ],
+      "lighthouse": false,
+      "endpoints": [],
+      "localKey": false
+    },
     "nostromo": {
       "address": "10.100.10.12",
       "groups": [
