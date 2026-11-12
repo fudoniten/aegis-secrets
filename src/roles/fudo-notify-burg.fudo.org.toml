@@ -1,0 +1,19 @@
+hosts = [
+    "cogito-0",
+    "cogito-1",
+    "forge",
+    "jazz",
+    "legio-0",
+    "legio-1",
+    "limina",
+    "magis-0",
+    "magis-1",
+    "magis-2",
+    "nomenclator-0",
+    "nomenclator-1",
+    "system7",
+    "telly",
+]
+
+[placement."secret:burg.fudo.org.ntfy-topic"]
+target = "/run/fudo-notify/topic"

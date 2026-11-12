@@ -1,0 +1,12 @@
+hosts = [
+    "aedile",
+    "arx",
+    "france",
+    "germany",
+    "legatus",
+    "paris",
+    "praetor",
+]
+
+[placement."secret:fudo.org.ntfy-topic"]
+target = "/run/fudo-notify/topic"

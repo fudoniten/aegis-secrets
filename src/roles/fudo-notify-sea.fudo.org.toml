@@ -1,0 +1,16 @@
+hosts = [
+    "cellar",
+    "fimbria",
+    "forum",
+    "janus",
+    "lambda",
+    "larder",
+    "nostromo",
+    "pantry",
+    "rama",
+    "thunk-0",
+    "wormhole0",
+]
+
+[placement."secret:sea.fudo.org.ntfy-topic"]
+target = "/run/fudo-notify/topic"
