@@ -1,0 +1,9 @@
+hosts = [
+    "arx",
+]
+
+[placement."secret:rcon-password"]
+target = "/run/minecraft-server/rcon.passwd"
+user = "minecraft"
+group = "root"
+mode = "0400"
