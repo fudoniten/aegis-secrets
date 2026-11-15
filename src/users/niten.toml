@@ -1,0 +1,5 @@
+hosts = [
+    "*",
+]
+repo_url = "git@github.com:fudoniten/niten-secrets.git"
+public_key = "age103cqej9k56u8t5q9wxckw897ydvv6wafd0hvgyt7kvquyagvzpfqv3vehc"
