@@ -14,3 +14,6 @@ hosts = [
 
 [placement."secret:sea.fudo.org.ntfy-topic"]
 target = "/run/fudo-notify/topic"
+user = "root"
+group = "fudo-notify"
+mode = "0440"
