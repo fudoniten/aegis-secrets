@@ -17,6 +17,9 @@ target = "/run/mail-server/redis.passwd"
 [placement."secret:ldap-bind.passwd"]
 target = "/run/mail-server/ldap-bind.passwd"
 
+[placement."secret:mail-oauth2.secret"]
+target = "/run/mail-server/mail-oauth2.secret"
+
 [placement."secret:mail-outpost.token"]
 target = "/run/mail-server/outpost.token"
 
