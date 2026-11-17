@@ -8,3 +8,5 @@ target = "/run/webmail/mail-oauth2.secret"
 
 [placement."secret:roundcube-oidc.secret"]
 target = "/run/webmail/roundcube-oidc.secret"
+user = "roundcube"
+group = "roundcube"
