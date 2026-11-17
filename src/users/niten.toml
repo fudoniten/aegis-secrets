@@ -3,4 +3,4 @@ hosts = [
 ]
 repo_url = "git@github.com:fudoniten/niten-secrets.git"
 public_key = "age103cqej9k56u8t5q9wxckw897ydvv6wafd0hvgyt7kvquyagvzpfqv3vehc"
-pulled_commit = "7f7657654600c4d00d46039a3b20eb96d78bb66d"
+pulled_commit = "c651ab94505d2002ea7325506114a14ebb5239d3"
