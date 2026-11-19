@@ -457,6 +457,20 @@
       "endpoints": [],
       "localKey": false
     },
+    "tribune": {
+      "address": "10.100.0.3",
+      "groups": [
+        "site-worldstream2",
+        "domain-fudo.org",
+        "server",
+        "lighthouse"
+      ],
+      "lighthouse": true,
+      "endpoints": [
+        "185.177.125.100:4242"
+      ],
+      "localKey": false
+    },
     "wormhole0": {
       "address": "10.100.10.14",
       "groups": [

@@ -1,3 +1,20 @@
 hosts = [
     "legatus",
+    "tribune",
 ]
+
+[placement."secret:nexus-dns-db-passwd"]
+target = "/run/nexus/dns-server-db.passwd"
+
+[placement."secret:nexus-dns-db-passwd-postgres"]
+target = "/run/nexus-postgres/dns-server-db.passwd"
+user = "postgres"
+group = "postgres"
+
+[placement."secret:nexus-server-db-passwd"]
+target = "/run/nexus/server-db.passwd"
+
+[placement."secret:nexus-server-db-passwd-postgres"]
+target = "/run/nexus-postgres/server-db.passwd"
+user = "postgres"
+group = "postgres"
