@@ -147,6 +147,10 @@ kind = "service"
 [principals."host/toothless.sea.fudo.org"]
 kind = "service"
 
+[principals."host/tribune.fudo.org"]
+kind = "service"
+host = "tribune"
+
 [principals."host/wormhole0.sea.fudo.org"]
 kind = "service"
 
@@ -439,6 +443,10 @@ kind = "service"
 
 [principals."ssh/toothless.sea.fudo.org"]
 kind = "service"
+
+[principals."ssh/tribune.fudo.org"]
+kind = "service"
+host = "tribune"
 
 [principals."ssh/wormhole0.sea.fudo.org"]
 kind = "service"
