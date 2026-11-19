@@ -6,6 +6,7 @@ hosts = [
     "legatus",
     "paris",
     "praetor",
+    "tribune",
 ]
 
 [placement."secret:fudo.org.ntfy-topic"]
