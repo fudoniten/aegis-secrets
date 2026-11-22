@@ -1,0 +1,9 @@
+hosts = [
+    "tribune",
+]
+
+[placement."secret:lemmy-db-passwd"]
+target = "/run/lemmy/db.passwd"
+
+[placement."secret:lemmy-db-url"]
+target = "/run/lemmy/db.url"
