@@ -3,7 +3,7 @@ hosts = [
 ]
 
 [placement."secret:lemmy-db-passwd"]
-target = "/run/lemmy/db.passwd"
+target = "/run/aegis/lemmy/db.passwd"
 
 [placement."secret:lemmy-db-url"]
-target = "/run/lemmy/db.url"
+target = "/run/aegis/lemmy/db.url"
