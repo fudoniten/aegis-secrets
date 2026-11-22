@@ -271,11 +271,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1795105628,
-        "narHash": "sha256-I2opOxvDH6FJxvuRn9sEmn/EACHOOGTfrmMgVzewcSc=",
+        "lastModified": 1795306230,
+        "narHash": "sha256-hALecv6NPB8a5ixO5hxILqMAmC6a1B6dMkWR3dUDj5c=",
         "ref": "refs/heads/master",
-        "rev": "ce982916409e36a27702ed18d9738e653d73ae40",
-        "revCount": 515,
+        "rev": "d408910a6879820bdebced9cd5c6f3d89f84e34d",
+        "revCount": 521,
         "type": "git",
         "url": "ssh://git@github.com/fudoniten/fudo-entities"
       },
@@ -384,11 +384,11 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1795137884,
-        "narHash": "sha256-iKXCN36qYfBni+3nH4vAd98/kshoIsPB2S9mYWhma30=",
+        "lastModified": 1795258312,
+        "narHash": "sha256-IEuDsf80ubivfpidbRsIm30HVo7PZIdZt1stRsbaY4Y=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ab5c18fdedfc8f9bbc9d773f10a540790e2787a7",
+        "rev": "94c3211b0ee8ba969a3f12eb4aff8ba0f72971dd",
         "type": "github"
       },
       "original": {
