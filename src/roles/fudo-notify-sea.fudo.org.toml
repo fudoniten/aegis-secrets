@@ -17,6 +17,12 @@ hosts = [
     "zbox",
 ]
 
+[placement."secret:sea.fudo.org.ntfy-token"]
+target = "/run/fudo-notify/token"
+user = "root"
+group = "fudo-notify"
+mode = "0440"
+
 [placement."secret:sea.fudo.org.ntfy-topic"]
 target = "/run/fudo-notify/topic"
 user = "root"
