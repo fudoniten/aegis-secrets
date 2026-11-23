@@ -12,7 +12,9 @@ This script initializes all hosts, roles, and builds secrets by:
 7. Ensuring sea/burg hosts declare an 'nfs' Kerberos service
 8. Generating and importing wallfly presence passwords
 9. Generating and importing domain MQTT service passwords
-10. Building all secrets
+10. Generating the self-hosted ntfy server's secrets and each domain's
+    fudo-notify topic and access token
+11. Building all secrets
 
 Entities come from the fudo-entities flake input, via the AEGIS_ENTITIES_JSON
 file the dev shell generates; run this from 'nix develop', not directly.
@@ -72,6 +74,30 @@ def mqtt_broker_role(site: str) -> str:
 #: 'sea.fudo.org' uses it today; 'burg.fudo.org' doesn't yet, but there's no
 #: harm in every host there having the principal ready before it does.
 LOCAL_NETWORK_DOMAINS = {"sea.fudo.org", "burg.fudo.org"}
+
+
+#: Hosts that run the self-hosted ntfy server (ntfy.fudo.org), i.e.
+#: `ntfyHost` in nixos-config's domain/fudo.org/config.nix. Not entity data,
+#: so -- like MQTT_BROKER_HOSTS -- it's hardcoded here and kept in sync by
+#: hand. These hosts make up the NTFY_SERVER_ROLE role.
+NTFY_SERVER_HOSTS = ["praetor"]
+NTFY_SERVER_ROLE = "fudo-ntfy"
+NTFY_URL = "https://ntfy.fudo.org"
+
+#: The regular ntfy user every domain's token belongs to. nixos-config's
+#: domain/fudo.org/ntfy.nix grants it `*:write-only`, so a leaked token can
+#: publish but never read.
+NTFY_PUBLISHER_USER = "fudo-notify"
+NTFY_ADMIN_USER = "admin"
+
+#: ntfy refuses any other token shape at startup (user/util.go:
+#: ^tk_[-_A-Za-z0-9]{29}$). Lowercase, as `ntfy token generate` makes them.
+NTFY_TOKEN_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789"
+NTFY_TOKEN_RE = re.compile(r'^tk_[-_A-Za-z0-9]{29}$')
+
+
+def fudo_notify_role(domain: str) -> str:
+    return f"fudo-notify-{domain}"
 
 
 # Colors for output
@@ -892,6 +918,329 @@ class SecretsSync:
             success("  ✓ Nothing to do")
         print()
 
+    # ------------------------------------------------------------------
+    # Self-hosted ntfy
+    # ------------------------------------------------------------------
+
+    def _admin_key_path(self) -> Path:
+        """The admin age identity, located the same way aegis does
+        (aegis/crypto.py default_admin_key_path)."""
+        override = os.getenv('AEGIS_ADMIN_KEY')
+        if override:
+            return Path(override)
+        return Path.home() / ".config" / "aegis" / "key.txt"
+
+    def _role_secret_path(self, role: str, name: str) -> Path:
+        return (Path(self.aegis_system) / "deploy" / "roles" / role
+                / "secrets" / f"{name}.age")
+
+    def _decrypt_role_secret(self, role: str, name: str) -> Optional[str]:
+        """Plaintext of a role secret, or None if it doesn't exist.
+
+        Every role secret is also encrypted to the admin set, so the admin
+        running this sync can read it back. Raises RuntimeError if it exists
+        but can't be decrypted: callers must not mistake "can't read" for
+        "missing" and generate a replacement over a live value.
+        """
+        path = self._role_secret_path(role, name)
+        if not path.exists():
+            return None
+        key = self._admin_key_path()
+        result = subprocess.run(
+            ['age', '--decrypt', '--identity', str(key), str(path)],
+            capture_output=True)
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"can't decrypt {path} with {key}: "
+                f"{result.stderr.decode(errors='replace').strip()}")
+        data = result.stdout
+        # aegis's pre-binary-clean wrapper (aegis/crypto.py).
+        if data.startswith(b"base64:"):
+            import base64
+            data = base64.b64decode(data[len(b"base64:"):])
+        return data.decode('utf-8')
+
+    def _import_role_secret(self, name: str, role: str, value: str,
+                             target: str, user: str = 'root',
+                             group: str = 'root', mode: str = '0400',
+                             force: bool = False) -> bool:
+        """'aegis secret import' via stdin, so the plaintext never touches
+        disk or the process list. Returns whether it succeeded."""
+        cmd = ['aegis', 'secret', 'import', name, '--role', role, '--stdin',
+               '--target', target, '--user', user, '--group', group,
+               '--mode', mode]
+        if force:
+            cmd.append('--force')
+        result = subprocess.run(cmd, input=value.encode('utf-8'),
+                                capture_output=True)
+        if result.returncode != 0:
+            sys.stderr.write(result.stdout.decode(errors='replace'))
+            sys.stderr.write(result.stderr.decode(errors='replace'))
+        return result.returncode == 0
+
+    @staticmethod
+    def _parse_env_file(text: str) -> Dict[str, str]:
+        """Parse the KEY='value' lines this script writes."""
+        out = {}
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, _, value = line.partition('=')
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+                value = value[1:-1]
+            out[key.strip()] = value
+        return out
+
+    @staticmethod
+    def _split_ntfy_list(value: str) -> List[List[str]]:
+        return [entry.strip().split(':')
+                for entry in value.split(',') if entry.strip()]
+
+    @staticmethod
+    def _ntfy_token_accepted(token: str) -> bool:
+        """Whether NTFY_URL accepts `token` as NTFY_PUBLISHER_USER.
+
+        GET /v1/account is open to anonymous callers but answers 401 to a
+        token the server doesn't know, and names the user for one it does.
+        So a 200 naming the publisher means praetor is up AND running an env
+        file that includes this token -- exactly what has to be true before
+        any host is pointed at it.
+        """
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(
+            f"{NTFY_URL}/v1/account",
+            headers={'Authorization': f'Bearer {token}'})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = json.load(resp)
+        except (urllib.error.URLError, OSError, ValueError):
+            return False
+        return body.get('username') == NTFY_PUBLISHER_USER
+
+    def ntfy_domains(self) -> Dict[str, List[str]]:
+        """Domains with at least one onboarded host, and those hosts.
+
+        Read from the domain-<domain> roles, which add_hosts_to_roles has
+        already brought up to date by the time this runs.
+        """
+        out = {}
+        for domain in sorted(self.entities.get('domains', {})):
+            members = sorted(self.get_role_members(f"domain-{domain}"))
+            if members:
+                out[domain] = members
+        return out
+
+    def ensure_ntfy_secrets(self) -> None:
+        """Provision the self-hosted ntfy server and every domain's
+        fudo-notify secrets (nixos-config domain/fudo.org/ntfy.nix and
+        profiles/host/notify.nix).
+
+        Server side, role NTFY_SERVER_ROLE (NTFY_SERVER_HOSTS):
+          ntfy-admin-password  the `admin` login for the phone and web app.
+                               root-only on the server, so it can be read
+                               there; generated once, never rotated here.
+          ntfy-server.env      NTFY_AUTH_USERS + NTFY_AUTH_TOKENS: the admin,
+                               the publisher user, and one publisher token
+                               per domain, labelled with the domain.
+
+        Per domain, role fudo-notify-<domain> (every domain-<domain> member):
+          <domain>.ntfy-topic  the topic it publishes to (made if missing).
+          <domain>.ntfy-token  its publisher token. A host that has one sends
+                               to ntfy.fudo.org instead of ntfy.sh.
+
+        The server env is the source of truth for tokens, and it covers every
+        domain at once, so it is rebuilt from the decrypted current one rather
+        than generated per domain. Bcrypt hashes are reused when the password
+        still matches, and the env is only re-imported when its content
+        changes -- otherwise every sync would re-salt them and restart ntfy
+        (the same trap aegis's keytabs fell into).
+
+        A domain's host-side secrets are held back until NTFY_URL accepts its
+        token. Otherwise a host deployed before the server would switch to a
+        server that isn't there and its alerts would vanish. So a new domain
+        takes two syncs: one that adds its token to the server env, a deploy
+        of the server, and one that hands the token to its hosts.
+        """
+        info("Ensuring ntfy secrets...")
+
+        try:
+            import bcrypt
+        except ImportError:
+            warn("  ⚠ Python 'bcrypt' module not available (it's in the dev "
+                 "shell), skipping ntfy")
+            print()
+            return
+
+        existing_hosts = self.get_aegis_hosts()
+        existing_roles = self.get_aegis_roles()
+
+        server_hosts = [h for h in NTFY_SERVER_HOSTS if h in existing_hosts]
+        if not server_hosts:
+            warn(f"  ⚠ No ntfy server host ({', '.join(NTFY_SERVER_HOSTS)}) "
+                 f"in aegis yet, skipping ntfy")
+            print()
+            return
+        if not self._ensure_role(NTFY_SERVER_ROLE, server_hosts,
+                                 existing_roles):
+            warn(f"  ⚠ Role {NTFY_SERVER_ROLE} unavailable, skipping ntfy")
+            print()
+            return
+
+        domains = self.ntfy_domains()
+
+        # Everything that already exists has to be readable before anything
+        # is generated, or a value we merely failed to read would be replaced.
+        try:
+            admin_password = self._decrypt_role_secret(
+                NTFY_SERVER_ROLE, 'ntfy-admin-password')
+            current_env_text = self._decrypt_role_secret(
+                NTFY_SERVER_ROLE, 'ntfy-server.env')
+            client_tokens = {
+                d: self._decrypt_role_secret(fudo_notify_role(d),
+                                             f"{d}.ntfy-token")
+                for d in domains
+            }
+        except RuntimeError as e:
+            error(f"  ✗ {e}")
+            warn("  ⚠ Skipping ntfy: existing secrets must be readable with "
+                 "the admin key (AEGIS_ADMIN_KEY) before anything is "
+                 "generated")
+            print()
+            return
+
+        current_env = self._parse_env_file(current_env_text or '')
+        current_hashes = {
+            parts[0]: parts[1]
+            for parts in self._split_ntfy_list(
+                current_env.get('NTFY_AUTH_USERS', ''))
+            if len(parts) == 3
+        }
+        env_tokens = {
+            parts[2]: parts[1]
+            for parts in self._split_ntfy_list(
+                current_env.get('NTFY_AUTH_TOKENS', ''))
+            if len(parts) == 3 and parts[0] == NTFY_PUBLISHER_USER
+        }
+
+        # Admin password: generated once.
+        if admin_password is None:
+            admin_password = ''.join(
+                secrets.choice(NTFY_TOKEN_ALPHABET) for _ in range(32))
+            info("  → Generating ntfy-admin-password")
+            if not self._import_role_secret(
+                    'ntfy-admin-password', NTFY_SERVER_ROLE, admin_password,
+                    target='/run/aegis/ntfy/admin-password'):
+                error("  ✗ Failed to import ntfy-admin-password")
+                print()
+                return
+        admin_password = admin_password.strip()
+
+        def keep_or_hash(user: str, password: Optional[str]) -> str:
+            old = current_hashes.get(user)
+            if old is not None and (
+                    password is None
+                    or bcrypt.checkpw(password.encode(), old.encode())):
+                return old
+            if password is None:
+                # The publisher only ever authenticates by token; its
+                # password exists because ntfy requires one, and is never
+                # used or kept.
+                password = secrets.token_urlsafe(32)
+            return bcrypt.hashpw(password.encode(),
+                                 bcrypt.gensalt(rounds=10)).decode()
+
+        admin_hash = keep_or_hash(NTFY_ADMIN_USER, admin_password)
+        publisher_hash = keep_or_hash(NTFY_PUBLISHER_USER, None)
+
+        # One token per domain: the one the domain's hosts already hold if
+        # any (they're what's deployed, so the server must accept it), else
+        # the server env's, else a new one.
+        tokens: Dict[str, str] = {}
+        for domain in domains:
+            client_token = (client_tokens[domain] or '').strip() or None
+            token = client_token or env_tokens.get(domain)
+            if token is None or not NTFY_TOKEN_RE.match(token):
+                token = 'tk_' + ''.join(
+                    secrets.choice(NTFY_TOKEN_ALPHABET) for _ in range(29))
+                info(f"  → Generating ntfy token for {domain}")
+            tokens[domain] = token
+
+        # Tokens for domains that no longer have hosts are dropped.
+        new_env_text = (
+            "# Generated by fudo-sync (aegis-secrets scripts/fudo-sync.py).\n"
+            f"NTFY_AUTH_USERS='{NTFY_ADMIN_USER}:{admin_hash}:admin,"
+            f"{NTFY_PUBLISHER_USER}:{publisher_hash}:user'\n"
+            "NTFY_AUTH_TOKENS='" + ','.join(
+                f"{NTFY_PUBLISHER_USER}:{tokens[d]}:{d}" for d in sorted(tokens))
+            + "'\n")
+
+        if new_env_text == current_env_text:
+            success("  ✓ ntfy-server.env up to date")
+        else:
+            info("  → Writing ntfy-server.env "
+                 f"({len(tokens)} domain token(s))")
+            if not self._import_role_secret(
+                    'ntfy-server.env', NTFY_SERVER_ROLE, new_env_text,
+                    target='/run/aegis/ntfy/server.env',
+                    force=current_env_text is not None):
+                error("  ✗ Failed to import ntfy-server.env; not handing "
+                      "out any tokens")
+                print()
+                return
+            success(f"  ✓ ntfy-server.env updated -- deploy "
+                    f"{', '.join(server_hosts)} before the next sync")
+
+        # Host side, one domain at a time.
+        provisioned = 0
+        waiting = []
+        for domain, members in domains.items():
+            role = fudo_notify_role(domain)
+            if not self._ensure_role(role, members, existing_roles):
+                warn(f"  ⚠ {domain}: role {role} unavailable, skipping")
+                continue
+
+            topic_name = f"{domain}.ntfy-topic"
+            token_name = f"{domain}.ntfy-token"
+            has_topic = self._role_secret_exists(role, topic_name)
+            if client_tokens[domain] is not None and has_topic:
+                provisioned += 1
+                continue
+
+            if not self._ntfy_token_accepted(tokens[domain]):
+                waiting.append(domain)
+                continue
+
+            if not has_topic:
+                topic = ''.join(
+                    secrets.choice(NTFY_TOKEN_ALPHABET) for _ in range(32))
+                info(f"  → Generating {topic_name}")
+                if not self._import_role_secret(
+                        topic_name, role, topic,
+                        target='/run/fudo-notify/topic',
+                        group='fudo-notify', mode='0440'):
+                    error(f"  ✗ Failed to import {topic_name}")
+                    continue
+            if client_tokens[domain] is None:
+                info(f"  → Handing {domain}'s hosts their ntfy token")
+                if not self._import_role_secret(
+                        token_name, role, tokens[domain],
+                        target='/run/fudo-notify/token',
+                        group='fudo-notify', mode='0440'):
+                    error(f"  ✗ Failed to import {token_name}")
+                    continue
+            provisioned += 1
+
+        if provisioned:
+            success(f"  ✓ {provisioned} domain(s) publishing to {NTFY_URL}")
+        if waiting:
+            warn(f"  ⚠ {NTFY_URL} doesn't accept the token yet for: "
+                 f"{', '.join(waiting)}. Deploy {', '.join(server_hosts)} "
+                 f"and sync again; until then those hosts stay as they are.")
+        print()
+
     def get_nexus_key_format(self, hostname: str) -> Optional[str]:
         """Format of a host's [nexus-key] manifest entry: "hmac", "ed25519",
         or None if the host has no Nexus key at all yet."""
@@ -1112,6 +1461,7 @@ class SecretsSync:
         self.ensure_local_nfs_principals()
         self.ensure_wallfly_secrets()
         self.ensure_mqtt_service_secrets()
+        self.ensure_ntfy_secrets()
 
         # Build all secrets. This also writes a role key for every member that
         # does not have one yet, and reconciles role secrets into the manifests
