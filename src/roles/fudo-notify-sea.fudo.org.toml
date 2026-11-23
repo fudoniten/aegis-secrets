@@ -10,6 +10,11 @@ hosts = [
     "rama",
     "thunk-0",
     "wormhole0",
+    "grendal",
+    "system3",
+    "thing-0",
+    "toothless",
+    "zbox",
 ]
 
 [placement."secret:sea.fudo.org.ntfy-topic"]

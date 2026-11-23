@@ -1,0 +1,15 @@
+hosts = [
+    "praetor",
+]
+
+[placement."secret:ntfy-admin-password"]
+target = "/run/aegis/ntfy/admin-password"
+user = "root"
+group = "root"
+mode = "0400"
+
+[placement."secret:ntfy-server.env"]
+target = "/run/aegis/ntfy/server.env"
+user = "root"
+group = "root"
+mode = "0400"
