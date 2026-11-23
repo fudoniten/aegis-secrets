@@ -123,7 +123,15 @@
         };
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = [ aegis pkgs.age pkgs.ssh-to-age pkgs.git pkgs.jq ];
+          # python3 with bcrypt: fudo-sync hashes the ntfy server's passwords.
+          buildInputs = [
+            aegis
+            pkgs.age
+            pkgs.ssh-to-age
+            pkgs.git
+            pkgs.jq
+            (pkgs.python3.withPackages (ps: [ ps.bcrypt ]))
+          ];
 
           shellHook = ''
             export AEGIS_SYSTEM="$PWD"
