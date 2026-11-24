@@ -1,5 +1,5 @@
 hosts = [
-    "arx",
+    "germany",
 ]
 
 [placement."secret:mastodon-oidc.env"]
