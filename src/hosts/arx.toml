@@ -12,6 +12,3 @@ target = "/run/dawarich/postgres.env"
 
 [placement."secret:dawarich.env"]
 target = "/run/dawarich/env"
-
-[placement."secret:mastodon-oidc.env"]
-target = "/run/mastodon/oidc.env"
