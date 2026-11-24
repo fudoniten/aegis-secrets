@@ -534,7 +534,7 @@ The §4 roadmap was implemented across three commits:
 
 Running it against `aegis-secrets` for the first time reported:
 
-- three hosts with no master key: `clunk`, `paris`, `pselby-work`
+- three hosts with no master key: `clunk`, `paris`, `pselby-work` (paris is a container on germany, `status = "external"`, and never needs one)
 - no `kdc` role at all, so every keytab built before creating it would have been unreadable by the KDC
 - 32 hosts resolving to a realm, none with a keytab — the consequence of B4
 - three `dns-master-*` roles with host members but no public key, alongside orphaned
