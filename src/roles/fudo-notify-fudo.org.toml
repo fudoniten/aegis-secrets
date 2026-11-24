@@ -4,7 +4,6 @@ hosts = [
     "france",
     "germany",
     "legatus",
-    "paris",
     "praetor",
     "tribune",
 ]

@@ -1,9 +1,6 @@
-services = [
-    "host",
-    "ssh",
-]
+services = []
 filesystem_keys = []
 status = "external"
-note = "container on germany; no secrets delivered directly"
+note = "container on germany (fudo-entities kind = container); no secrets or Kerberos principals of its own. Its SSH host keys are germany secrets paris-ssh-*.key"
 
 [extra_secrets]
