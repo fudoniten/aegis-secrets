@@ -1,0 +1,6 @@
+hosts = [
+    "arx",
+]
+
+[placement."secret:mastodon-oidc.env"]
+target = "/run/mastodon/oidc.env"
