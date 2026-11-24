@@ -9,11 +9,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795235637,
-        "narHash": "sha256-1er0yNaG2mzPpa4xLMWGiJjdySbksGGzzm/ZqiyfdGs=",
+        "lastModified": 1795495087,
+        "narHash": "sha256-o8LMXM3h6wJellw4nXq/V1vhREJzNiHufnKD0BT5OUg=",
         "owner": "fudoniten",
         "repo": "aegis-tools-system",
-        "rev": "8a57f30d1ce3596748e0621b0ebff2ef2f4b73eb",
+        "rev": "09baf280e535198134adc1cac52219b68225f603",
         "type": "github"
       },
       "original": {
